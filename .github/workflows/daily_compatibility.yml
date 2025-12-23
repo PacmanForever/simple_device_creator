@@ -1,0 +1,23 @@
+name: Daily Compatibility Tests
+on:
+  schedule:
+    - cron: '0 6 * * *'  # Daily at 6:00 AM UTC
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+        homeassistant-version: ["stable", "beta"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: |
+          python -m pip install --upgrade pip
+          pip install homeassistant==${{ matrix.homeassistant-version }}
+          pip install -r requirements-test.txt
+      - run: python -m pytest tests/component --cov=custom_components.simple_device_creator --cov-report=term -v

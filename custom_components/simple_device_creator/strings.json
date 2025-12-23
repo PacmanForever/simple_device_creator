@@ -1,0 +1,100 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Simple Device Creator",
+        "description": "Manage your virtual devices. Current devices: {device_count}",
+        "data": {
+          "menu_option": "Action"
+        }
+      },
+      "create_device": {
+        "title": "Create New Device",
+        "description": "Enter device information. {help_connections}",
+        "data": {
+          "name": "Name",
+          "manufacturer": "Manufacturer",
+          "model": "Model",
+          "sw_version": "Software Version",
+          "hw_version": "Hardware Version",
+          "configuration_url": "Configuration URL",
+          "connections": "Connections"
+        }
+      },
+      "select_device": {
+        "title": "Select Device",
+        "description": "Choose a device to {action}. **Warning:** Deleting a device will not remove any entities that have been manually added to it.",
+        "data": {
+          "device_id": "Device"
+        }
+      },
+      "edit_device": {
+        "title": "Edit Device",
+        "description": "Modify device information. {help_connections}",
+        "data": {
+          "name": "Name",
+          "manufacturer": "Manufacturer",
+          "model": "Model",
+          "sw_version": "Software Version",
+          "hw_version": "Hardware Version",
+          "configuration_url": "Configuration URL",
+          "connections": "Connections"
+        }
+      }
+    },
+    "error": {
+      "invalid_format": "Invalid format for connections. Use type:value, separated by commas."
+    },
+    "abort": {},
+    "create_entry": {
+      "default": "Simple Device Creator configured successfully."
+    }
+  },
+  "options": {
+    "step": {
+      "user": {
+        "title": "Device Management",
+        "description": "Manage your virtual devices. Current devices: {device_count}",
+        "data": {
+          "menu_option": "Action"
+        }
+      },
+      "create_device": {
+        "title": "Create New Device",
+        "description": "Enter device information. {help_connections}",
+        "data": {
+          "name": "Name",
+          "manufacturer": "Manufacturer",
+          "model": "Model",
+          "sw_version": "Software Version",
+          "hw_version": "Hardware Version",
+          "configuration_url": "Configuration URL",
+          "connections": "Connections"
+        }
+      },
+      "select_device": {
+        "title": "Select Device",
+        "description": "Choose a device to {action}. **Warning:** Deleting a device will not remove any entities that have been manually added to it.",
+        "data": {
+          "device_id": "Device"
+        }
+      },
+      "edit_device": {
+        "title": "Edit Device",
+        "description": "Modify device information. {help_connections}",
+        "data": {
+          "name": "Name",
+          "manufacturer": "Manufacturer",
+          "model": "Model",
+          "sw_version": "Software Version",
+          "hw_version": "Hardware Version",
+          "configuration_url": "Configuration URL",
+          "connections": "Connections"
+        }
+      }
+    },
+    "error": {
+      "invalid_format": "Invalid format for connections. Use type:value, separated by commas."
+    }
+  }
+}
