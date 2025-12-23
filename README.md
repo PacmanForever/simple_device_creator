@@ -1,8 +1,6 @@
 # Simple Device Creator
 
 [![hacs](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/hacs/integration)
-[![Version](https://img.shields.io/github/v/tag/PacmanForever/simple-device-creator?label=version)](https://github.com/PacmanForever/simple-device-creator/tags)
-[![Stars](https://img.shields.io/github/stars/PacmanForever/simple-device-creator?style=social)](https://github.com/PacmanForever/simple-device-creator/stargazers)
 [![License](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 ![Coverage](https://img.shields.io/badge/coverage-95%25-brightgreen)
 [![Unit Tests](https://github.com/PacmanForever/simple-device-creator/actions/workflows/tests_unit.yml/badge.svg)](https://github.com/PacmanForever/simple-device-creator/actions/workflows/tests_unit.yml)
