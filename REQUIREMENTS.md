@@ -5,7 +5,7 @@ This document outlines the specific requirements for the Simple Device Creator H
 ## Integration Overview
 
 - **Name**: Simple Device Creator
-- **Domain**: simple-device-creator
+- **Domain**: simple_device_creator
 - **Version**: 1.0.0
 - **Home Assistant**: 2025.12.0
 

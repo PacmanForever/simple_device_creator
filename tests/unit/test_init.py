@@ -24,7 +24,7 @@ async def test_async_setup_entry():
         result = await async_setup_entry(hass, entry)
 
     assert result is True
-    assert entry.entry_id in hass.data["simple-device-creator"]
+    assert entry.entry_id in hass.data["simple_device_creator"]
     device_reg.async_get_or_create.assert_not_called()  # No devices
 
 
@@ -64,7 +64,7 @@ async def test_async_setup_entry_with_devices():
 async def test_async_unload_entry():
     """Test unloading the integration."""
     hass = MagicMock()
-    hass.data = {"simple-device-creator": {"test_entry": "data"}}
+    hass.data = {"simple_device_creator": {"test_entry": "data"}}
     entry = MagicMock()
     entry.entry_id = "test_entry"
     
@@ -74,4 +74,4 @@ async def test_async_unload_entry():
     result = await async_unload_entry(hass, entry)
 
     assert result is True
-    assert entry.entry_id not in hass.data["simple-device-creator"]
+    assert entry.entry_id not in hass.data["simple_device_creator"]

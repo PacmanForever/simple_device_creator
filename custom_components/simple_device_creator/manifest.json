@@ -1,5 +1,5 @@
 {
-  "domain": "simple-device-creator",
+  "domain": "simple_device_creator",
   "name": "Simple Device Creator",
   "codeowners": ["@PacmanForever"],
   "config_flow": true,
