@@ -1,9 +1,9 @@
 # Simple Device Creator
 
-[![Unit Tests](https://github.com/username/simple_device_creator/actions/workflows/tests_unit.yml/badge.svg)](https://github.com/username/simple_device_creator/actions/workflows/tests_unit.yml)
-[![Component Tests](https://github.com/username/simple_device_creator/actions/workflows/tests_component.yml/badge.svg)](https://github.com/username/simple_device_creator/actions/workflows/tests_component.yml)
-[![Validate HACS](https://github.com/username/simple_device_creator/actions/workflows/validate_hacs.yml/badge.svg)](https://github.com/username/simple_device_creator/actions/workflows/validate_hacs.yml)
-[![Validate Hassfest](https://github.com/username/simple_device_creator/actions/workflows/validate_hassfest.yml/badge.svg)](https://github.com/username/simple_device_creator/actions/workflows/validate_hassfest.yml)
+[![Unit Tests](https://github.com/pacmanforever/simple_device_creator/actions/workflows/tests_unit.yml/badge.svg)](https://github.com/pacmanforever/simple_device_creator/actions/workflows/tests_unit.yml)
+[![Component Tests](https://github.com/pacmanforever/simple_device_creator/actions/workflows/tests_component.yml/badge.svg)](https://github.com/pacmanforever/simple_device_creator/actions/workflows/tests_component.yml)
+[![Validate HACS](https://github.com/pacmanforever/simple_device_creator/actions/workflows/validate_hacs.yml/badge.svg)](https://github.com/pacmanforever/simple_device_creator/actions/workflows/validate_hacs.yml)
+[![Validate Hassfest](https://github.com/pacmanforever/simple_device_creator/actions/workflows/validate_hassfest.yml/badge.svg)](https://github.com/pacmanforever/simple_device_creator/actions/workflows/validate_hassfest.yml)
 
 A Home Assistant integration that allows users to create simple virtual devices for testing and development purposes.
 
@@ -15,12 +15,12 @@ A Home Assistant integration that allows users to create simple virtual devices 
 2. Go to Integrations
 3. Click the three dots in the top right corner
 4. Select "Custom repositories"
-5. Add this repository URL: `https://github.com/username/simple_device_creator`
+5. Add this repository URL: `https://github.com/pacmanforever/simple_device_creator`
 6. Search for "Simple Device Creator" and install
 
 ### Manual Installation
 
-1. Download the latest release from [GitHub Releases](https://github.com/username/simple_device_creator/releases)
+1. Download the latest release from [GitHub Releases](https://github.com/pacmanforever/simple_device_creator/releases)
 2. Extract the contents to `config/custom_components/simple_device_creator/`
 3. Restart Home Assistant
 
