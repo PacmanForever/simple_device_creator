@@ -3,10 +3,10 @@
   "name": "Simple Device Creator",
   "codeowners": ["@PacmanForever"],
   "config_flow": true,
-  "documentation": "https://github.com/PacmanForever/simple-device-creator",
+  "documentation": "https://github.com/PacmanForever/simple_device_creator",
   "integration_type": "hub",
   "iot_class": "local_polling",
-  "issue_tracker": "https://github.com/PacmanForever/simple-device-creator/issues",
+  "issue_tracker": "https://github.com/PacmanForever/simple_device_creator/issues",
   "requirements": [],
   "version": "0.0.1"
 }

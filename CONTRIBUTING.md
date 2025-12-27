@@ -4,7 +4,7 @@ Thank you for your interest in contributing to the Simple Device Creator integra
 
 ## Reporting Issues
 
-- Use the [GitHub Issues](https://github.com/username/simple_device_creator/issues) to report bugs or request features
+- Use the [GitHub Issues](https://github.com/PacmanForever/simple_device_creator/issues) to report bugs or request features
 - Provide detailed information including:
   - Home Assistant version
   - Integration version
@@ -15,7 +15,7 @@ Thank you for your interest in contributing to the Simple Device Creator integra
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/username/simple_device_creator.git
+   git clone https://github.com/PacmanForever/simple_device_creator.git
    cd simple_device_creator
 2. Set up a development environment:
    ```bash

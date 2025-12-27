@@ -3,7 +3,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from .const import DOMAIN, PLATFORMS
+from .const import DOMAIN, PLATFORMS, CONF_NAME, CONF_MANUFACTURER, CONF_MODEL, CONF_SW_VERSION, CONF_HW_VERSION, CONF_CONFIGURATION_URL, CONF_CONNECTIONS
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -19,13 +19,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         device_reg.async_get_or_create(
             config_entry_id=entry.entry_id,
             identifiers={(DOMAIN, device_data["id"])},
-            name=device_data.get("name"),
-            manufacturer=device_data.get("manufacturer"),
-            model=device_data.get("model"),
-            sw_version=device_data.get("sw_version"),
-            hw_version=device_data.get("hw_version"),
-            configuration_url=device_data.get("configuration_url"),
-            connections=set(tuple(conn) for conn in device_data.get("connections", [])),
+            name=device_data.get(CONF_NAME),
+            manufacturer=device_data.get(CONF_MANUFACTURER),
+            model=device_data.get(CONF_MODEL),
+            sw_version=device_data.get(CONF_SW_VERSION),
+            hw_version=device_data.get(CONF_HW_VERSION),
+            configuration_url=device_data.get(CONF_CONFIGURATION_URL),
+            connections=set(tuple(conn) for conn in device_data.get(CONF_CONNECTIONS, [])),
         )
 
     # Forward the setup to the platforms (none)

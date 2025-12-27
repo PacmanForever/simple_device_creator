@@ -1,13 +1,13 @@
 # Simple Device Creator
 
 [![hacs](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/hacs/integration)
-[![Version](https://img.shields.io/github/v/release/PacmanForever/simple-device-creator?label=version)](https://github.com/PacmanForever/simple-device-creator/releases)
+[![Version](https://img.shields.io/github/v/release/PacmanForever/simple_device_creator?label=version)](https://github.com/PacmanForever/simple_device_creator/releases)
 [![License](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 ![Coverage](https://img.shields.io/badge/coverage-95%25-brightgreen)
-[![Unit Tests](https://github.com/PacmanForever/simple-device-creator/actions/workflows/tests_unit.yml/badge.svg)](https://github.com/PacmanForever/simple-device-creator/actions/workflows/tests_unit.yml)
-[![Component Tests](https://github.com/PacmanForever/simple-device-creator/actions/workflows/tests_component.yml/badge.svg)](https://github.com/PacmanForever/simple-device-creator/actions/workflows/tests_component.yml)
-[![Validate HACS](https://github.com/PacmanForever/simple-device-creator/actions/workflows/validate_hacs.yml/badge.svg)](https://github.com/PacmanForever/simple-device-creator/actions/workflows/validate_hacs.yml)
-[![Validate Hassfest](https://github.com/PacmanForever/simple-device-creator/actions/workflows/validate_hassfest.yml/badge.svg)](https://github.com/PacmanForever/simple-device-creator/actions/workflows/validate_hassfest.yml)
+[![Unit Tests](https://github.com/PacmanForever/simple_device_creator/actions/workflows/tests_unit.yml/badge.svg)](https://github.com/PacmanForever/simple_device_creator/actions/workflows/tests_unit.yml)
+[![Component Tests](https://github.com/PacmanForever/simple_device_creator/actions/workflows/tests_component.yml/badge.svg)](https://github.com/PacmanForever/simple_device_creator/actions/workflows/tests_component.yml)
+[![Validate HACS](https://github.com/PacmanForever/simple_device_creator/actions/workflows/validate_hacs.yml/badge.svg)](https://github.com/PacmanForever/simple_device_creator/actions/workflows/validate_hacs.yml)
+[![Validate Hassfest](https://github.com/PacmanForever/simple_device_creator/actions/workflows/validate_hassfest.yml/badge.svg)](https://github.com/PacmanForever/simple_device_creator/actions/workflows/validate_hassfest.yml)
 
 ![Home Assistant](https://img.shields.io/badge/home%20assistant-2024.1.0%2B-blue)
 
@@ -24,12 +24,12 @@ A Home Assistant integration that allows users to create custom and empty device
 2. Go to Integrations
 3. Click the three dots in the top right corner
 4. Select "Custom repositories"
-5. Add this repository URL: `https://github.com/PacmanForever/simple-device-creator`
+5. Add this repository URL: `https://github.com/PacmanForever/simple_device_creator`
 6. Search for "Simple Device Creator" and install
 
 ### Manual Installation
 
-1. Download the latest release from [GitHub Releases](https://github.com/PacmanForever/simple-device-creator/releases)
+1. Download the latest release from [GitHub Releases](https://github.com/PacmanForever/simple_device_creator/releases)
 2. Extract the contents to `config/custom_components/simple_device_creator/`
 3. Restart Home Assistant
 
