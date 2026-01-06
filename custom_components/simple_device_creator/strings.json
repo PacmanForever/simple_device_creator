@@ -43,7 +43,8 @@
       }
     },
     "error": {
-      "invalid_format": "Invalid format for connections. Use type:value, separated by commas."
+      "invalid_format": "Invalid format for connections. Use type:value, separated by commas.",
+      "name_already_exists": "A device with this name already exists."
     },
     "abort": {},
     "create_entry": {

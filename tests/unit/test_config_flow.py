@@ -142,11 +142,32 @@ class TestSimpleDeviceCreatorConfigFlow:
         result = await flow.async_step_create_device(user_input)
 
         assert result["type"] == "form"
-        assert result["step_id"] == "user"
+        assert result["step_id"] == "create_device"
+        assert result["errors"]["connections"] == "invalid_format"
+        assert len(flow.devices) == 0
+
+    @pytest.mark.asyncio
+    async def test_step_create_device_duplicate_name(self):
+        """Test creating a device with duplicate name."""
+        flow = SimpleDeviceCreatorConfigFlow()
+        flow.devices = [{"id": "1", "name": "Existing Device"}]
+
+        user_input = {
+            CONF_NAME: "Existing Device",
+            CONF_MANUFACTURER: "",
+            CONF_MODEL: "",
+            CONF_SW_VERSION: "",
+            CONF_HW_VERSION: "",
+            CONF_CONFIGURATION_URL: "",
+            CONF_CONNECTIONS: "",
+        }
+
+        result = await flow.async_step_create_device(user_input)
+
+        assert result["type"] == "form"
+        assert result["step_id"] == "create_device"
+        assert result["errors"]["name"] == "name_already_exists"
         assert len(flow.devices) == 1
-        device = flow.devices[0]
-        assert device[CONF_NAME] == "Test Device"
-        assert device[CONF_CONNECTIONS] == []
 
     @pytest.mark.asyncio
     async def test_step_select_device_no_devices(self):
@@ -216,6 +237,59 @@ class TestSimpleDeviceCreatorConfigFlow:
         assert result["type"] == "form"
         assert result["step_id"] == "user"
         assert flow.devices[0][CONF_NAME] == "New Name"
+
+    @pytest.mark.asyncio
+    async def test_step_edit_device_duplicate_name(self):
+        """Test editing a device with duplicate name."""
+        flow = SimpleDeviceCreatorConfigFlow()
+        device_id = str(uuid.uuid4())
+        flow.devices = [
+            {"id": device_id, "name": "Device 1", "connections": []},
+            {"id": str(uuid.uuid4()), "name": "Device 2", "connections": []}
+        ]
+        flow.selected_device_id = device_id
+
+        user_input = {
+            CONF_NAME: "Device 2",
+            CONF_MANUFACTURER: "",
+            CONF_MODEL: "",
+            CONF_SW_VERSION: "",
+            CONF_HW_VERSION: "",
+            CONF_CONFIGURATION_URL: "",
+            CONF_CONNECTIONS: "",
+        }
+
+        result = await flow.async_step_edit_device(user_input)
+
+        assert result["type"] == "form"
+        assert result["step_id"] == "edit_device"
+        assert result["errors"]["name"] == "name_already_exists"
+        assert flow.devices[0][CONF_NAME] == "Device 1"  # unchanged
+
+    @pytest.mark.asyncio
+    async def test_step_edit_device_invalid_connections(self):
+        """Test editing a device with invalid connections."""
+        flow = SimpleDeviceCreatorConfigFlow()
+        device_id = str(uuid.uuid4())
+        flow.devices = [{"id": device_id, "name": "Test", "connections": []}]
+        flow.selected_device_id = device_id
+
+        user_input = {
+            CONF_NAME: "Test",
+            CONF_MANUFACTURER: "",
+            CONF_MODEL: "",
+            CONF_SW_VERSION: "",
+            CONF_HW_VERSION: "",
+            CONF_CONFIGURATION_URL: "",
+            CONF_CONNECTIONS: "invalid",
+        }
+
+        result = await flow.async_step_edit_device(user_input)
+
+        assert result["type"] == "form"
+        assert result["step_id"] == "edit_device"
+        assert result["errors"]["connections"] == "invalid_format"
+        assert flow.devices[0][CONF_CONNECTIONS] == []  # unchanged
 
 
 class TestSimpleDeviceCreatorOptionsFlow:
@@ -291,6 +365,30 @@ class TestSimpleDeviceCreatorOptionsFlow:
         assert device[CONF_NAME] == "Test Device"
         assert device[CONF_MANUFACTURER] == "Test Manufacturer"
         assert device[CONF_CONNECTIONS] == [("mac", "AA:BB:CC:DD:EE:FF")]
+
+    @pytest.mark.asyncio
+    async def test_step_create_device_duplicate_name_options(self):
+        """Test creating a device with duplicate name in options."""
+        config_entry = MagicMock()
+        config_entry.data = {"devices": [{"id": "existing", "name": "Existing Device"}]}
+        flow = SimpleDeviceCreatorOptionsFlow(config_entry)
+
+        user_input = {
+            CONF_NAME: "Existing Device",
+            CONF_MANUFACTURER: "",
+            CONF_MODEL: "",
+            CONF_SW_VERSION: "",
+            CONF_HW_VERSION: "",
+            CONF_CONFIGURATION_URL: "",
+            CONF_CONNECTIONS: "",
+        }
+
+        result = await flow.async_step_create_device(user_input)
+
+        assert result["type"] == "form"
+        assert result["step_id"] == "create_device"
+        assert result["errors"]["name"] == "name_already_exists"
+        assert len(flow.devices) == 1
 
     @pytest.mark.asyncio
     async def test_step_user_menu_edit(self):
@@ -414,6 +512,59 @@ class TestSimpleDeviceCreatorOptionsFlow:
         assert result["step_id"] == "user"
         assert flow.devices[0][CONF_NAME] == "Updated Test"
         assert flow.devices[0][CONF_MANUFACTURER] == "New Manufacturer"
+
+    @pytest.mark.asyncio
+    async def test_step_edit_device_duplicate_name_options(self):
+        """Test editing a device with duplicate name in options."""
+        config_entry = MagicMock()
+        config_entry.data = {"devices": [
+            {"id": "test1", "name": "Device 1", "connections": []},
+            {"id": "test2", "name": "Device 2", "connections": []}
+        ]}
+        flow = SimpleDeviceCreatorOptionsFlow(config_entry)
+        flow.selected_device_id = "test1"
+
+        user_input = {
+            CONF_NAME: "Device 2",
+            CONF_MANUFACTURER: "",
+            CONF_MODEL: "",
+            CONF_SW_VERSION: "",
+            CONF_HW_VERSION: "",
+            CONF_CONFIGURATION_URL: "",
+            CONF_CONNECTIONS: "",
+        }
+
+        result = await flow.async_step_edit_device(user_input)
+
+        assert result["type"] == "form"
+        assert result["step_id"] == "edit_device"
+        assert result["errors"]["name"] == "name_already_exists"
+        assert flow.devices[0][CONF_NAME] == "Device 1"  # unchanged
+
+    @pytest.mark.asyncio
+    async def test_step_edit_device_invalid_connections_options(self):
+        """Test editing a device with invalid connections in options."""
+        config_entry = MagicMock()
+        config_entry.data = {"devices": [{"id": "test", "name": "Test", "connections": []}]}
+        flow = SimpleDeviceCreatorOptionsFlow(config_entry)
+        flow.selected_device_id = "test"
+
+        user_input = {
+            CONF_NAME: "Test",
+            CONF_MANUFACTURER: "",
+            CONF_MODEL: "",
+            CONF_SW_VERSION: "",
+            CONF_HW_VERSION: "",
+            CONF_CONFIGURATION_URL: "",
+            CONF_CONNECTIONS: "invalid",
+        }
+
+        result = await flow.async_step_edit_device(user_input)
+
+        assert result["type"] == "form"
+        assert result["step_id"] == "edit_device"
+        assert result["errors"]["connections"] == "invalid_format"
+        assert flow.devices[0][CONF_CONNECTIONS] == []  # unchanged
 
     @pytest.mark.asyncio
     async def test_step_edit_device_show_form(self):

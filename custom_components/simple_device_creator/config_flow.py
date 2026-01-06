@@ -70,14 +70,59 @@ class SimpleDeviceCreatorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle device creation."""
 
         if user_input is not None:
-            # Parse connections
+            # Validate name uniqueness
+            if any(d[CONF_NAME] == user_input[CONF_NAME] for d in self.devices):
+                return self.async_show_form(
+                    step_id="create_device",
+                    data_schema=vol.Schema(
+                        {
+                            vol.Required(CONF_NAME, default=DEFAULT_DEVICE_NAME): str,
+                            vol.Optional(CONF_MANUFACTURER, default=DEFAULT_MANUFACTURER): str,
+                            vol.Optional(CONF_MODEL, default=DEFAULT_MODEL): str,
+                            vol.Optional(CONF_SW_VERSION, default=DEFAULT_SW_VERSION): str,
+                            vol.Optional(CONF_HW_VERSION, default=DEFAULT_HW_VERSION): str,
+                            vol.Optional(CONF_CONFIGURATION_URL, default=DEFAULT_CONFIGURATION_URL): str,
+                            vol.Optional(CONF_CONNECTIONS, default=""): str,
+                        }
+                    ),
+                    description_placeholders={
+                        "help_connections": "Format: type1:value1, type2:value2 (e.g., mac:AA:BB:CC:DD:EE:FF, ip:192.168.1.1)"
+                    },
+                    errors={"name": "name_already_exists"},
+                )
+
+            # Parse and validate connections
             connections = []
+            valid_connections = True
             if user_input.get(CONF_CONNECTIONS):
                 for conn in user_input[CONF_CONNECTIONS].split(","):
                     conn = conn.strip()
-                    if conn and ":" in conn:
+                    if conn:
+                        if ":" not in conn:
+                            valid_connections = False
+                            break
                         conn_type, conn_value = conn.split(":", 1)
                         connections.append((conn_type.strip(), conn_value.strip()))
+
+            if not valid_connections:
+                return self.async_show_form(
+                    step_id="create_device",
+                    data_schema=vol.Schema(
+                        {
+                            vol.Required(CONF_NAME, default=user_input[CONF_NAME]): str,
+                            vol.Optional(CONF_MANUFACTURER, default=user_input[CONF_MANUFACTURER]): str,
+                            vol.Optional(CONF_MODEL, default=user_input[CONF_MODEL]): str,
+                            vol.Optional(CONF_SW_VERSION, default=user_input[CONF_SW_VERSION]): str,
+                            vol.Optional(CONF_HW_VERSION, default=user_input[CONF_HW_VERSION]): str,
+                            vol.Optional(CONF_CONFIGURATION_URL, default=user_input[CONF_CONFIGURATION_URL]): str,
+                            vol.Optional(CONF_CONNECTIONS, default=user_input[CONF_CONNECTIONS]): str,
+                        }
+                    ),
+                    description_placeholders={
+                        "help_connections": "Format: type1:value1, type2:value2 (e.g., mac:AA:BB:CC:DD:EE:FF, ip:192.168.1.1)"
+                    },
+                    errors={"connections": "invalid_format"},
+                )
 
             device = {
                 "id": str(uuid.uuid4()),
@@ -143,14 +188,60 @@ class SimpleDeviceCreatorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         device = next(d for d in self.devices if d["id"] == self.selected_device_id)
 
         if user_input is not None:
-            # Parse connections
+            # Validate name uniqueness
+            if any(d[CONF_NAME] == user_input[CONF_NAME] and d["id"] != self.selected_device_id for d in self.devices):
+                connections_str = ", ".join(f"{t}:{v}" for t, v in device.get(CONF_CONNECTIONS, []))
+                return self.async_show_form(
+                    step_id="edit_device",
+                    data_schema=vol.Schema(
+                        {
+                            vol.Required(CONF_NAME, default=device[CONF_NAME]): str,
+                            vol.Optional(CONF_MANUFACTURER, default=device.get(CONF_MANUFACTURER, "")): str,
+                            vol.Optional(CONF_MODEL, default=device.get(CONF_MODEL, "")): str,
+                            vol.Optional(CONF_SW_VERSION, default=device.get(CONF_SW_VERSION, "")): str,
+                            vol.Optional(CONF_HW_VERSION, default=device.get(CONF_HW_VERSION, "")): str,
+                            vol.Optional(CONF_CONFIGURATION_URL, default=device.get(CONF_CONFIGURATION_URL, "")): str,
+                            vol.Optional(CONF_CONNECTIONS, default=connections_str): str,
+                        }
+                    ),
+                    description_placeholders={
+                        "help_connections": "Format: type1:value1, type2:value2"
+                    },
+                    errors={"name": "name_already_exists"},
+                )
+
+            # Parse and validate connections
             connections = []
+            valid_connections = True
             if user_input.get(CONF_CONNECTIONS):
                 for conn in user_input[CONF_CONNECTIONS].split(","):
                     conn = conn.strip()
-                    if conn and ":" in conn:
+                    if conn:
+                        if ":" not in conn:
+                            valid_connections = False
+                            break
                         conn_type, conn_value = conn.split(":", 1)
                         connections.append((conn_type.strip(), conn_value.strip()))
+
+            if not valid_connections:
+                return self.async_show_form(
+                    step_id="edit_device",
+                    data_schema=vol.Schema(
+                        {
+                            vol.Required(CONF_NAME, default=user_input[CONF_NAME]): str,
+                            vol.Optional(CONF_MANUFACTURER, default=user_input[CONF_MANUFACTURER]): str,
+                            vol.Optional(CONF_MODEL, default=user_input[CONF_MODEL]): str,
+                            vol.Optional(CONF_SW_VERSION, default=user_input[CONF_SW_VERSION]): str,
+                            vol.Optional(CONF_HW_VERSION, default=user_input[CONF_HW_VERSION]): str,
+                            vol.Optional(CONF_CONFIGURATION_URL, default=user_input[CONF_CONFIGURATION_URL]): str,
+                            vol.Optional(CONF_CONNECTIONS, default=user_input[CONF_CONNECTIONS]): str,
+                        }
+                    ),
+                    description_placeholders={
+                        "help_connections": "Format: type1:value1, type2:value2"
+                    },
+                    errors={"connections": "invalid_format"},
+                )
 
             device.update({
                 CONF_NAME: user_input[CONF_NAME],
@@ -236,13 +327,59 @@ class SimpleDeviceCreatorOptionsFlow(config_entries.OptionsFlow):
         # Same as config flow
 
         if user_input is not None:
+            # Validate name uniqueness
+            if any(d[CONF_NAME] == user_input[CONF_NAME] for d in self.devices):
+                return self.async_show_form(
+                    step_id="create_device",
+                    data_schema=vol.Schema(
+                        {
+                            vol.Required(CONF_NAME, default=DEFAULT_DEVICE_NAME): str,
+                            vol.Optional(CONF_MANUFACTURER, default=DEFAULT_MANUFACTURER): str,
+                            vol.Optional(CONF_MODEL, default=DEFAULT_MODEL): str,
+                            vol.Optional(CONF_SW_VERSION, default=DEFAULT_SW_VERSION): str,
+                            vol.Optional(CONF_HW_VERSION, default=DEFAULT_HW_VERSION): str,
+                            vol.Optional(CONF_CONFIGURATION_URL, default=DEFAULT_CONFIGURATION_URL): str,
+                            vol.Optional(CONF_CONNECTIONS, default=""): str,
+                        }
+                    ),
+                    description_placeholders={
+                        "help_connections": "Format: type1:value1, type2:value2"
+                    },
+                    errors={"name": "name_already_exists"},
+                )
+
+            # Parse and validate connections
             connections = []
+            valid_connections = True
             if user_input.get(CONF_CONNECTIONS):
                 for conn in user_input[CONF_CONNECTIONS].split(","):
                     conn = conn.strip()
-                    if conn and ":" in conn:
+                    if conn:
+                        if ":" not in conn:
+                            valid_connections = False
+                            break
                         conn_type, conn_value = conn.split(":", 1)
                         connections.append((conn_type.strip(), conn_value.strip()))
+
+            if not valid_connections:
+                return self.async_show_form(
+                    step_id="create_device",
+                    data_schema=vol.Schema(
+                        {
+                            vol.Required(CONF_NAME, default=user_input[CONF_NAME]): str,
+                            vol.Optional(CONF_MANUFACTURER, default=user_input[CONF_MANUFACTURER]): str,
+                            vol.Optional(CONF_MODEL, default=user_input[CONF_MODEL]): str,
+                            vol.Optional(CONF_SW_VERSION, default=user_input[CONF_SW_VERSION]): str,
+                            vol.Optional(CONF_HW_VERSION, default=user_input[CONF_HW_VERSION]): str,
+                            vol.Optional(CONF_CONFIGURATION_URL, default=user_input[CONF_CONFIGURATION_URL]): str,
+                            vol.Optional(CONF_CONNECTIONS, default=user_input[CONF_CONNECTIONS]): str,
+                        }
+                    ),
+                    description_placeholders={
+                        "help_connections": "Format: type1:value1, type2:value2"
+                    },
+                    errors={"connections": "invalid_format"},
+                )
 
             device = {
                 "id": str(uuid.uuid4()),
@@ -308,13 +445,60 @@ class SimpleDeviceCreatorOptionsFlow(config_entries.OptionsFlow):
         device = next(d for d in self.devices if d["id"] == self.selected_device_id)
 
         if user_input is not None:
+            # Validate name uniqueness
+            if any(d[CONF_NAME] == user_input[CONF_NAME] and d["id"] != self.selected_device_id for d in self.devices):
+                connections_str = ", ".join(f"{t}:{v}" for t, v in device.get(CONF_CONNECTIONS, []))
+                return self.async_show_form(
+                    step_id="edit_device",
+                    data_schema=vol.Schema(
+                        {
+                            vol.Required(CONF_NAME, default=device[CONF_NAME]): str,
+                            vol.Optional(CONF_MANUFACTURER, default=device.get(CONF_MANUFACTURER, "")): str,
+                            vol.Optional(CONF_MODEL, default=device.get(CONF_MODEL, "")): str,
+                            vol.Optional(CONF_SW_VERSION, default=device.get(CONF_SW_VERSION, "")): str,
+                            vol.Optional(CONF_HW_VERSION, default=device.get(CONF_HW_VERSION, "")): str,
+                            vol.Optional(CONF_CONFIGURATION_URL, default=device.get(CONF_CONFIGURATION_URL, "")): str,
+                            vol.Optional(CONF_CONNECTIONS, default=connections_str): str,
+                        }
+                    ),
+                    description_placeholders={
+                        "help_connections": "Format: type1:value1, type2:value2"
+                    },
+                    errors={"name": "name_already_exists"},
+                )
+
+            # Parse and validate connections
             connections = []
+            valid_connections = True
             if user_input.get(CONF_CONNECTIONS):
                 for conn in user_input[CONF_CONNECTIONS].split(","):
                     conn = conn.strip()
-                    if conn and ":" in conn:
+                    if conn:
+                        if ":" not in conn:
+                            valid_connections = False
+                            break
                         conn_type, conn_value = conn.split(":", 1)
                         connections.append((conn_type.strip(), conn_value.strip()))
+
+            if not valid_connections:
+                return self.async_show_form(
+                    step_id="edit_device",
+                    data_schema=vol.Schema(
+                        {
+                            vol.Required(CONF_NAME, default=user_input[CONF_NAME]): str,
+                            vol.Optional(CONF_MANUFACTURER, default=user_input[CONF_MANUFACTURER]): str,
+                            vol.Optional(CONF_MODEL, default=user_input[CONF_MODEL]): str,
+                            vol.Optional(CONF_SW_VERSION, default=user_input[CONF_SW_VERSION]): str,
+                            vol.Optional(CONF_HW_VERSION, default=user_input[CONF_HW_VERSION]): str,
+                            vol.Optional(CONF_CONFIGURATION_URL, default=user_input[CONF_CONFIGURATION_URL]): str,
+                            vol.Optional(CONF_CONNECTIONS, default=user_input[CONF_CONNECTIONS]): str,
+                        }
+                    ),
+                    description_placeholders={
+                        "help_connections": "Format: type1:value1, type2:value2"
+                    },
+                    errors={"connections": "invalid_format"},
+                )
 
             device.update({
                 CONF_NAME: user_input[CONF_NAME],
