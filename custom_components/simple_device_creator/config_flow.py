@@ -28,6 +28,23 @@ from .const import (
 )
 
 
+def parse_connections(connections_str):
+    """Parse connections string to list of tuples."""
+    connections = []
+    if not connections_str:
+        return connections
+        
+    for conn in connections_str.split(","):
+        conn = conn.strip()
+        if not conn:
+            continue
+        if ":" not in conn:
+            raise ValueError("invalid_format")
+        conn_type, conn_value = conn.split(":", 1)
+        connections.append((conn_type.strip(), conn_value.strip()))
+    return connections
+
+
 class SimpleDeviceCreatorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Simple Device Creator."""
 
@@ -92,19 +109,9 @@ class SimpleDeviceCreatorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
 
             # Parse and validate connections
-            connections = []
-            valid_connections = True
-            if user_input.get(CONF_CONNECTIONS):
-                for conn in user_input[CONF_CONNECTIONS].split(","):
-                    conn = conn.strip()
-                    if conn:
-                        if ":" not in conn:
-                            valid_connections = False
-                            break
-                        conn_type, conn_value = conn.split(":", 1)
-                        connections.append((conn_type.strip(), conn_value.strip()))
-
-            if not valid_connections:
+            try:
+                connections = parse_connections(user_input.get(CONF_CONNECTIONS))
+            except ValueError:
                 return self.async_show_form(
                     step_id="create_device",
                     data_schema=vol.Schema(
@@ -211,19 +218,9 @@ class SimpleDeviceCreatorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
 
             # Parse and validate connections
-            connections = []
-            valid_connections = True
-            if user_input.get(CONF_CONNECTIONS):
-                for conn in user_input[CONF_CONNECTIONS].split(","):
-                    conn = conn.strip()
-                    if conn:
-                        if ":" not in conn:
-                            valid_connections = False
-                            break
-                        conn_type, conn_value = conn.split(":", 1)
-                        connections.append((conn_type.strip(), conn_value.strip()))
-
-            if not valid_connections:
+            try:
+                connections = parse_connections(user_input.get(CONF_CONNECTIONS))
+            except ValueError:
                 return self.async_show_form(
                     step_id="edit_device",
                     data_schema=vol.Schema(
@@ -349,19 +346,9 @@ class SimpleDeviceCreatorOptionsFlow(config_entries.OptionsFlow):
                 )
 
             # Parse and validate connections
-            connections = []
-            valid_connections = True
-            if user_input.get(CONF_CONNECTIONS):
-                for conn in user_input[CONF_CONNECTIONS].split(","):
-                    conn = conn.strip()
-                    if conn:
-                        if ":" not in conn:
-                            valid_connections = False
-                            break
-                        conn_type, conn_value = conn.split(":", 1)
-                        connections.append((conn_type.strip(), conn_value.strip()))
-
-            if not valid_connections:
+            try:
+                connections = parse_connections(user_input.get(CONF_CONNECTIONS))
+            except ValueError:
                 return self.async_show_form(
                     step_id="create_device",
                     data_schema=vol.Schema(
@@ -468,19 +455,9 @@ class SimpleDeviceCreatorOptionsFlow(config_entries.OptionsFlow):
                 )
 
             # Parse and validate connections
-            connections = []
-            valid_connections = True
-            if user_input.get(CONF_CONNECTIONS):
-                for conn in user_input[CONF_CONNECTIONS].split(","):
-                    conn = conn.strip()
-                    if conn:
-                        if ":" not in conn:
-                            valid_connections = False
-                            break
-                        conn_type, conn_value = conn.split(":", 1)
-                        connections.append((conn_type.strip(), conn_value.strip()))
-
-            if not valid_connections:
+            try:
+                connections = parse_connections(user_input.get(CONF_CONNECTIONS))
+            except ValueError:
                 return self.async_show_form(
                     step_id="edit_device",
                     data_schema=vol.Schema(
