@@ -28,7 +28,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             model=device_data.get(CONF_MODEL),
             sw_version=device_data.get(CONF_SW_VERSION),
             hw_version=device_data.get(CONF_HW_VERSION),
-            configuration_url=device_data.get(CONF_CONFIGURATION_URL),
+            configuration_url=device_data.get(CONF_CONFIGURATION_URL) or None,
             connections=set(tuple(conn) for conn in device_data.get(CONF_CONNECTIONS, [])),
         )
 

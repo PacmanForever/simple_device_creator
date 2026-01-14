@@ -1,0 +1,61 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Create First Device",
+        "description": "Enter information for the first device. You can add more devices later via the configuration options.",
+        "data": {
+          "name": "Name",
+          "manufacturer": "Manufacturer (optional)",
+          "model": "Model (optional)",
+          "sw_version": "Software Version (optional)",
+          "hw_version": "Hardware Version (optional)"
+        }
+      }
+    },
+    "error": {
+      "name_already_exists": "A device with this name already exists."
+    },
+    "abort": {},
+    "create_entry": {
+      "default": "Simple Device Creator configured successfully."
+    }
+  },
+  "options": {
+    "step": {
+      "user": {
+        "title": "Device Management",
+        "description": "Manage your virtual devices. Current devices: {device_count}. Select a device to edit or create a new one.",
+        "data": {
+          "device_id": "Device"
+        }
+      },
+      "create_device": {
+        "title": "Create New Device",
+        "description": "Enter device information.",
+        "data": {
+          "name": "Name",
+          "manufacturer": "Manufacturer (optional)",
+          "model": "Model (optional)",
+          "sw_version": "Software Version (optional)",
+          "hw_version": "Hardware Version (optional)"
+        }
+      },
+      "edit_device": {
+        "title": "Edit Device",
+        "description": "Modify device information.",
+        "data": {
+          "name": "Name",
+          "manufacturer": "Manufacturer (optional)",
+          "model": "Model (optional)",
+          "sw_version": "Software Version (optional)",
+          "hw_version": "Hardware Version (optional)",
+          "delete_device": "Delete this device?"
+        }
+      }
+    },
+    "error": {
+      "name_already_exists": "A device with this name already exists."
+    }
+  }
+}

@@ -8,6 +8,7 @@ from homeassistant.data_entry_flow import FlowResult
 from .const import (
     CONF_CONFIGURATION_URL,
     CONF_CONNECTIONS,
+    CONF_DELETE_DEVICE,
     CONF_HW_VERSION,
     CONF_MANUFACTURER,
     CONF_MODEL,
@@ -50,8 +51,6 @@ class SimpleDeviceCreatorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_MODEL: user_input[CONF_MODEL],
                     CONF_SW_VERSION: user_input[CONF_SW_VERSION],
                     CONF_HW_VERSION: user_input[CONF_HW_VERSION],
-                    CONF_CONFIGURATION_URL: "",
-                    CONF_CONNECTIONS: [],
                 }
                 
                 return self.async_create_entry(
@@ -97,29 +96,25 @@ class SimpleDeviceCreatorOptionsFlow(config_entries.OptionsFlow):
     async def async_step_user(self, user_input=None) -> FlowResult:
         """Handle the options step."""
         if user_input is not None:
-            if user_input["menu_option"] == MENU_FINISH:
-                return self.async_create_entry(
-                    title="",
-                    data={"devices": self.devices},
-                )
-            elif user_input["menu_option"] == MENU_CREATE_DEVICE:
+            if user_input["device_id"] == MENU_CREATE_DEVICE:
                 return await self.async_step_create_device()
-            elif user_input["menu_option"] == MENU_EDIT_DEVICE:
-                return await self.async_step_select_device()
-            elif user_input["menu_option"] == MENU_DELETE_DEVICE:
-                return await self.async_step_select_device(delete=True)
+            else:
+                self.selected_device_id = user_input["device_id"]
+                return await self.async_step_edit_device()
 
-        menu_options = MENU_OPTIONS
+        device_options = {d["id"]: d[CONF_NAME] for d in self.devices}
+        # Add create option
+        device_options[MENU_CREATE_DEVICE] = "Create New Device"
 
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required("menu_option"): vol.In(menu_options),
+                    vol.Required("device_id"): vol.In(device_options),
                 }
             ),
             description_placeholders={
-                "device_count": len(self.devices),
+                "device_count": str(len(self.devices)),
             },
         )
 
@@ -153,8 +148,6 @@ class SimpleDeviceCreatorOptionsFlow(config_entries.OptionsFlow):
                 CONF_MODEL: user_input[CONF_MODEL],
                 CONF_SW_VERSION: user_input[CONF_SW_VERSION],
                 CONF_HW_VERSION: user_input[CONF_HW_VERSION],
-                CONF_CONFIGURATION_URL: "",
-                CONF_CONNECTIONS: [],
             }
             self.devices.append(device)
             return await self.async_step_user()
@@ -207,6 +200,11 @@ class SimpleDeviceCreatorOptionsFlow(config_entries.OptionsFlow):
         device = next(d for d in self.devices if d["id"] == self.selected_device_id)
 
         if user_input is not None:
+             # Handle delete
+            if user_input.get(CONF_DELETE_DEVICE):
+                self.devices = [d for d in self.devices if d["id"] != self.selected_device_id]
+                return await self.async_step_user()
+                
             # Validate name uniqueness
             if any(d[CONF_NAME] == user_input[CONF_NAME] and d["id"] != self.selected_device_id for d in self.devices):
                 return self.async_show_form(
@@ -218,6 +216,7 @@ class SimpleDeviceCreatorOptionsFlow(config_entries.OptionsFlow):
                             vol.Optional(CONF_MODEL, default=device.get(CONF_MODEL, "")): str,
                             vol.Optional(CONF_SW_VERSION, default=device.get(CONF_SW_VERSION, "")): str,
                             vol.Optional(CONF_HW_VERSION, default=device.get(CONF_HW_VERSION, "")): str,
+                            vol.Optional(CONF_DELETE_DEVICE, default=False): bool,
                         }
                     ),
                     description_placeholders={
@@ -243,6 +242,7 @@ class SimpleDeviceCreatorOptionsFlow(config_entries.OptionsFlow):
                     vol.Optional(CONF_MODEL, default=device.get(CONF_MODEL, "")): str,
                     vol.Optional(CONF_SW_VERSION, default=device.get(CONF_SW_VERSION, "")): str,
                     vol.Optional(CONF_HW_VERSION, default=device.get(CONF_HW_VERSION, "")): str,
+                    vol.Optional(CONF_DELETE_DEVICE, default=False): bool,
                 }
             ),
             description_placeholders={
