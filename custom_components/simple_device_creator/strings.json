@@ -2,8 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "Create First Device",
-        "description": "Enter information for the first device. You can add more devices later via the configuration options.",
+        "title": "Create device",
         "data": {
           "name": "Name",
           "manufacturer": "Manufacturer (optional)",
@@ -24,31 +23,6 @@
   "options": {
     "step": {
       "user": {
-        "title": "Device Management",
-        "description": "Manage your virtual devices. Current devices: {device_count}",
-        "data": {
-          "menu_option": "Action"
-        }
-      },
-      "create_device": {
-        "title": "Create New Device",
-        "description": "Enter device information.",
-        "data": {
-          "name": "Name",
-          "manufacturer": "Manufacturer (optional)",
-          "model": "Model (optional)",
-          "sw_version": "Software Version (optional)",
-          "hw_version": "Hardware Version (optional)"
-        }
-      },
-      "select_device": {
-        "title": "Select Device",
-        "description": "Choose a device to {action}. **Warning:** Deleting a device will not remove any entities that have been manually added to it.",
-        "data": {
-          "device_id": "Device"
-        }
-      },
-      "edit_device": {
         "title": "Edit Device",
         "description": "Modify device information.",
         "data": {
