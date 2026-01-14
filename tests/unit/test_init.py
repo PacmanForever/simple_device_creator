@@ -2,7 +2,7 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
-from custom_components.simple_device_creator import async_setup_entry, async_unload_entry
+from custom_components.simple_device_creator import async_setup_entry, async_unload_entry, async_reload_entry
 from custom_components.simple_device_creator.const import DOMAIN
 
 
@@ -106,6 +106,43 @@ async def test_async_setup_entry_prunes_devices():
 
 
 @pytest.mark.asyncio
+async def test_async_setup_entry_keeps_current_devices():
+    """Test keeping current devices."""
+    hass = MagicMock()
+    hass.data = {}
+    entry = MagicMock()
+    entry.entry_id = "test_entry"
+    entry.data = {
+        "devices": [
+            {
+                "id": "existing_device_id",
+                "name": "Existing Device",
+            }
+        ]
+    }
+
+    hass.config_entries.async_forward_entry_setups = AsyncMock(return_value=None)
+
+    with patch('custom_components.simple_device_creator.dr.async_get') as mock_async_get, \
+         patch('custom_components.simple_device_creator.dr.async_entries_for_config_entry') as mock_entries:
+        
+        device_reg = MagicMock()
+        mock_async_get.return_value = device_reg
+        
+        # Mock existing device in registry
+        existing_device = MagicMock()
+        existing_device.id = "existing_device_reg_id"
+        existing_device.identifiers = {(DOMAIN, "existing_device_id")}
+        mock_entries.return_value = [existing_device]
+
+        result = await async_setup_entry(hass, entry)
+
+    assert result is True
+    # Verify device was NOT removed
+    device_reg.async_remove_device.assert_not_called()
+
+
+@pytest.mark.asyncio
 async def test_async_unload_entry():
     """Test unloading the integration."""
     hass = MagicMock()
@@ -120,3 +157,17 @@ async def test_async_unload_entry():
 
     assert result is True
     assert entry.entry_id not in hass.data["simple_device_creator"]
+
+
+@pytest.mark.asyncio
+async def test_async_reload_entry():
+    """Test reloading the integration."""
+    hass = MagicMock()
+    entry = MagicMock()
+    entry.entry_id = "test_entry"
+    
+    hass.config_entries.async_reload = AsyncMock()
+
+    await async_reload_entry(hass, entry)
+
+    hass.config_entries.async_reload.assert_called_once_with(entry.entry_id)
