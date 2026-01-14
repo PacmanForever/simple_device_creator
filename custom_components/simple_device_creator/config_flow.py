@@ -6,15 +6,12 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
-    CONF_CONFIGURATION_URL,
-    CONF_CONNECTIONS,
     CONF_DELETE_DEVICE,
     CONF_HW_VERSION,
     CONF_MANUFACTURER,
     CONF_MODEL,
     CONF_NAME,
     CONF_SW_VERSION,
-    DEFAULT_CONFIGURATION_URL,
     DEFAULT_DEVICE_NAME,
     DEFAULT_HW_VERSION,
     DEFAULT_MANUFACTURER,

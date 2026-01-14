@@ -8,14 +8,11 @@ from custom_components.simple_device_creator.config_flow import (
     SimpleDeviceCreatorOptionsFlow,
 )
 from custom_components.simple_device_creator.const import (
-    CONF_CONFIGURATION_URL,
-    CONF_CONNECTIONS,
     CONF_HW_VERSION,
     CONF_MANUFACTURER,
     CONF_MODEL,
     CONF_NAME,
     CONF_SW_VERSION,
-    DEFAULT_CONFIGURATION_URL,
     DEFAULT_DEVICE_NAME,
     DEFAULT_HW_VERSION,
     DEFAULT_MANUFACTURER,
@@ -66,7 +63,6 @@ class TestSimpleDeviceCreatorConfigFlow:
         assert len(result["data"]["devices"]) == 1
         device = result["data"]["devices"][0]
         assert device[CONF_NAME] == "Test Device"
-        assert device[CONF_CONNECTIONS] == []
 
     def test_async_get_options_flow(self):
         """Test get options flow."""
@@ -145,7 +141,6 @@ class TestSimpleDeviceCreatorOptionsFlow:
         device = flow.devices[0]
         assert device[CONF_NAME] == "Test Device"
         assert device[CONF_MANUFACTURER] == "Test Manufacturer"
-        assert device[CONF_CONNECTIONS] == []
 
     @pytest.mark.asyncio
     async def test_step_create_device_duplicate_name_options(self):

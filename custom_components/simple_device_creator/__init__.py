@@ -3,7 +3,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from .const import DOMAIN, PLATFORMS, CONF_NAME, CONF_MANUFACTURER, CONF_MODEL, CONF_SW_VERSION, CONF_HW_VERSION, CONF_CONFIGURATION_URL, CONF_CONNECTIONS
+from .const import DOMAIN, PLATFORMS, CONF_NAME, CONF_MANUFACTURER, CONF_MODEL, CONF_SW_VERSION, CONF_HW_VERSION
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -28,8 +28,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             model=device_data.get(CONF_MODEL),
             sw_version=device_data.get(CONF_SW_VERSION),
             hw_version=device_data.get(CONF_HW_VERSION),
-            configuration_url=device_data.get(CONF_CONFIGURATION_URL) or None,
-            connections=set(tuple(conn) for conn in device_data.get(CONF_CONNECTIONS, [])),
         )
 
     # Remove devices that are no longer in the config
