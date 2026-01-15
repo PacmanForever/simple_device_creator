@@ -16,7 +16,7 @@ def main():
     subprocess.run(['git', 'tag', '-a', f'v{version}', '-m', f'Release v{version}'], check=True)
 
     # Push branch and tag
-    subprocess.run(['git', 'push', 'origin', 'main'], check=True)
+    subprocess.run(['git', 'push', 'origin', 'master'], check=True)
     subprocess.run(['git', 'push', 'origin', f'v{version}'], check=True)
 
     print(f"Released version {version}")
