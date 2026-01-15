@@ -3,10 +3,10 @@ import uuid
 import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.core import callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
-    CONF_DELETE_DEVICE,
     CONF_HW_VERSION,
     CONF_MANUFACTURER,
     CONF_MODEL,
@@ -18,11 +18,6 @@ from .const import (
     DEFAULT_MODEL,
     DEFAULT_SW_VERSION,
     DOMAIN,
-    MENU_CREATE_DEVICE,
-    MENU_DELETE_DEVICE,
-    MENU_EDIT_DEVICE,
-    MENU_FINISH,
-    MENU_OPTIONS,
 )
 
 
@@ -96,33 +91,53 @@ class SimpleDeviceCreatorOptionsFlow(config_entries.OptionsFlow):
         if not self.devices:
              return self.async_create_entry(title="", data={"devices": []})
         
-        device = self.devices[0]
+        device_data = self.devices[0]
+        
+        # Get Device Registry to sync names
+        registry = dr.async_get(self.hass)
+        device_entry = registry.async_get_device(identifiers={(DOMAIN, device_data["id"])})
 
         if user_input is not None:
-             # Handle delete
-            if user_input.get(CONF_DELETE_DEVICE):
-                self.devices = []
-                return self.async_create_entry(title="", data={"devices": []})
-
-            device.update({
+            # Update internal config
+            device_data.update({
                 CONF_NAME: user_input[CONF_NAME],
                 CONF_MANUFACTURER: user_input[CONF_MANUFACTURER],
                 CONF_MODEL: user_input[CONF_MODEL],
                 CONF_SW_VERSION: user_input[CONF_SW_VERSION],
                 CONF_HW_VERSION: user_input[CONF_HW_VERSION],
             })
+
+            # Sync with device registry if it exists
+            if device_entry:
+                # Clear name_by_user so the new integration name takes precedence (via reload)
+                registry.async_update_device(device_entry.id, name_by_user=None)
+
             return self.async_create_entry(title="", data={"devices": self.devices})
+
+        # Pre-fill defaults
+        default_name = device_data[CONF_NAME]
+        default_manufacturer = device_data.get(CONF_MANUFACTURER, "")
+        default_model = device_data.get(CONF_MODEL, "")
+        default_sw = device_data.get(CONF_SW_VERSION, "")
+        default_hw = device_data.get(CONF_HW_VERSION, "")
+
+        if device_entry:
+            default_name = device_entry.name_by_user or device_entry.name or default_name
+            # Also sync other fields if available in registry
+            default_manufacturer = device_entry.manufacturer or default_manufacturer
+            default_model = device_entry.model or default_model
+            default_sw = device_entry.sw_version or default_sw
+            default_hw = device_entry.hw_version or default_hw
 
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_NAME, default=device[CONF_NAME]): str,
-                    vol.Optional(CONF_MANUFACTURER, default=device.get(CONF_MANUFACTURER, "")): str,
-                    vol.Optional(CONF_MODEL, default=device.get(CONF_MODEL, "")): str,
-                    vol.Optional(CONF_SW_VERSION, default=device.get(CONF_SW_VERSION, "")): str,
-                    vol.Optional(CONF_HW_VERSION, default=device.get(CONF_HW_VERSION, "")): str,
-                    vol.Optional(CONF_DELETE_DEVICE, default=False): bool,
+                    vol.Required(CONF_NAME, default=default_name): str,
+                    vol.Optional(CONF_MANUFACTURER, default=default_manufacturer): str,
+                    vol.Optional(CONF_MODEL, default=default_model): str,
+                    vol.Optional(CONF_SW_VERSION, default=default_sw): str,
+                    vol.Optional(CONF_HW_VERSION, default=default_hw): str,
                 }
             ),
             description_placeholders={

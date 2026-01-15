@@ -12,14 +12,12 @@ CONF_HW_VERSION = "hw_version"
 # Menu options for config flow
 MENU_CREATE_DEVICE = "create_device"
 MENU_EDIT_DEVICE = "edit_device"
-MENU_DELETE_DEVICE = "delete_device"
 MENU_FINISH = "finish"
 
 # Menu options list
 MENU_OPTIONS = [
     MENU_CREATE_DEVICE,
     MENU_EDIT_DEVICE,
-    MENU_DELETE_DEVICE,
     MENU_FINISH,
 ]
 
@@ -29,4 +27,3 @@ DEFAULT_MANUFACTURER = ""
 DEFAULT_MODEL = ""
 DEFAULT_SW_VERSION = ""
 DEFAULT_HW_VERSION = ""
-CONF_DELETE_DEVICE = "delete_device"
