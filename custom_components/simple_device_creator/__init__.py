@@ -20,6 +20,33 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     for device_data in devices:
         device_id = device_data["id"]
         current_ids.add(device_id)
+        
+        # Check if device already exists in registry to accept name_by_user rename
+        device_entry = device_reg.async_get_device(identifiers={(DOMAIN, device_id)})
+        
+        if device_entry and device_entry.name_by_user:
+            # Sync Config Entry title and data if name_by_user is present
+            if entry.title != device_entry.name_by_user:
+                # Update data copy
+                new_data = entry.data.copy()
+                # Find the device in the new data to update it
+                for dev in new_data.get("devices", []):
+                    if dev["id"] == device_id:
+                        dev[CONF_NAME] = device_entry.name_by_user
+                        break
+                
+                hass.config_entries.async_update_entry(
+                    entry, 
+                    title=device_entry.name_by_user,
+                    data=new_data
+                )
+                
+                # Clear name_by_user from registry so the device uses the new integration name
+                device_reg.async_update_device(device_entry.id, name_by_user=None)
+                
+                # Update local variable so async_get_or_create uses the new name
+                device_data[CONF_NAME] = device_entry.name_by_user
+
         device_reg.async_get_or_create(
             config_entry_id=entry.entry_id,
             identifiers={(DOMAIN, device_id)},
