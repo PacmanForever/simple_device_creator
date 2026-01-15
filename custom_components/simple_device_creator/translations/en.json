@@ -24,7 +24,6 @@
     "step": {
       "user": {
         "title": "Edit Device",
-        "description": "Modify device information.",
         "data": {
           "name": "Name",
           "manufacturer": "Manufacturer (optional)",

@@ -112,6 +112,11 @@ class SimpleDeviceCreatorOptionsFlow(config_entries.OptionsFlow):
                 # Clear name_by_user so the new integration name takes precedence (via reload)
                 registry.async_update_device(device_entry.id, name_by_user=None)
 
+            # Update config entry title
+            self.hass.config_entries.async_update_entry(
+                self._config_entry, title=user_input[CONF_NAME]
+            )
+
             return self.async_create_entry(title="", data={"devices": self.devices})
 
         # Pre-fill defaults
