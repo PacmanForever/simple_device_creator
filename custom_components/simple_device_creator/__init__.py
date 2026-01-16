@@ -1,6 +1,6 @@
 """Simple Device Creator integration for Home Assistant."""
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, Event, callback
 from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN, PLATFORMS, CONF_NAME, CONF_MANUFACTURER, CONF_MODEL, CONF_SW_VERSION, CONF_HW_VERSION
@@ -70,6 +70,62 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Forward the setup to the platforms (none)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    # Watch for device registry updates to sync name changes immediately
+    @callback
+    def async_registry_updated(event: Event) -> None:
+        """Handle device registry updates."""
+        if event.data["action"] != "update":
+            return
+            
+        if "device_id" not in event.data:
+            return
+
+        device_id_reg = event.data["device_id"]
+        
+        # Get the device to see if it belongs to this entry
+        device_entry = device_reg.async_get(device_id_reg)
+        if not device_entry:
+            return
+            
+        if entry.entry_id not in device_entry.config_entries:
+            return
+            
+        if device_entry.name_by_user and entry.title != device_entry.name_by_user:
+            # Update data copy
+            new_data = entry.data.copy()
+            # Find the device in the new data to update it
+            # We need to find which internal device corresponds to this registry device
+            # Identify by identifiers
+            internal_device_id = None
+            for domain, identifier in device_entry.identifiers:
+                if domain == DOMAIN:
+                    internal_device_id = identifier
+                    break
+            
+            if not internal_device_id:
+                return
+
+            device_found = False
+            for dev in new_data.get("devices", []):
+                if dev["id"] == internal_device_id:
+                    dev[CONF_NAME] = device_entry.name_by_user
+                    device_found = True
+                    break
+            
+            if device_found:
+                hass.config_entries.async_update_entry(
+                    entry, 
+                    title=device_entry.name_by_user,
+                    data=new_data
+                )
+                
+                # Clear name_by_user from registry so the device uses the new integration name
+                device_reg.async_update_device(device_entry.id, name_by_user=None)
+
+    entry.async_on_unload(
+        hass.bus.async_listen(dr.EVENT_DEVICE_REGISTRY_UPDATED, async_registry_updated)
+    )
 
     # Update listener
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
