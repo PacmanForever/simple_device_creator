@@ -219,3 +219,6 @@ class TestSimpleDeviceCreatorOptionsFlow:
             
             # Verify registry update was called to clear name_by_user
             mock_registry.async_update_device.assert_called_with("device_reg_id", name_by_user=None)
+            
+            # Verify config entry title update
+            flow.hass.config_entries.async_update_entry.assert_called_with(config_entry, title="New Name")
