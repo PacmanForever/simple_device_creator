@@ -19,14 +19,28 @@ The integration manages devices solely based on the configuration entry data. Th
 
 ## 2. Config Flow & Options Flow
 
-### Connection Parsing
-- Device connections (MAC, IP, etc.) are entered as comma-separated strings (e.g., `mac:xx:xx, ip:1.2.3.4`).
-- **DRY Principle**: Validation and parsing logic for these strings is centralized in the `parse_connections` helper function within `config_flow.py`. Do not duplicate this logic in `async_step_create_device` or `async_step_edit_device`.
+### Current Scope
+- The current UI flow creates one config entry that can collect zero or more virtual devices during setup.
+- The options flow supports adding, editing, moving, and deleting devices, and renaming the entry/group title, including deleting the last remaining device in a group.
+- Supported fields are limited to `name`, `manufacturer`, `model`, `sw_version`, and `hw_version`.
+- There is currently no `connections` or `configuration_url` handling in the live code.
+- Legacy single-device entries are migrated into one entry initially titled `General`.
 
 ### Update Listeners
 - The integration supports dynamic reconfiguration via Options Flow.
 - Ensure `entry.add_update_listener(async_reload_entry)` is registered in `async_setup_entry`.
-- This ensures that when a user adds/edits/deletes a device in the Options menu, the integration reloads and the `async_setup_entry` logic (including pruning) is re-executed immediately.
+- This ensures that when a user adds, edits, or deletes devices in the Options menu, the integration reloads and the `async_setup_entry` logic (including pruning) is re-executed immediately.
+
+### Rename Synchronization
+- Renaming the device from the Home Assistant device registry sets `name_by_user` on the registry entry.
+- `async_setup_entry` and the device registry update listener must sync that name back into the matching stored device name.
+- The config entry title is an independent group name and must not be changed by device renames.
+- After syncing, clear `name_by_user` so the integration-owned name becomes authoritative again.
+
+### Cross-Entry Device Moves
+- Moving a device between hub entries must preserve the same device-registry device identity.
+- Do not implement hub moves as delete-and-recreate if registry identity can be preserved.
+- When moving a device, add the destination config entry to the registry device, then remove the source config entry association, and finally update both entries' stored `devices` lists.
 
 ## 3. Testing
 

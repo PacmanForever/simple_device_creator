@@ -6,16 +6,17 @@ This document outlines the specific requirements for the Simple Device Creator H
 
 - **Name**: Simple Device Creator
 - **Domain**: simple_device_creator
-- **Version**: 1.0.0
-- **Home Assistant**: 2025.12.0
+- **Version**: 0.0.15
+- **Home Assistant**: 2024.1.0+
 
 ## Functional Requirements
 
 ### Core Features
 - Create virtual devices without linked entities
-- Support for creating multiple devices per integration instance
-- Devices can be modified and deleted after creation
-- User will add entities to devices later manually
+- Current UI flow manages multiple devices per integration entry
+- Devices can be added, modified, moved between hubs, and deleted after creation through the options flow
+- Multiple integration entries are allowed, each acting as an independent device group
+- User can later associate entities manually from Home Assistant workflows
 - Configuration UI for device creation and editing
 
 ### Operating Modes
@@ -29,8 +30,6 @@ For each device, the following fields are configurable:
 - **model** (optional): Device model
 - **sw_version** (optional): Software version
 - **hw_version** (optional): Hardware version
-- **configuration_url** (optional): URL for device configuration
-- **connections** (optional): Network connections (MAC, IP, etc.)
 
 Default values:
 - name: "New Device"
@@ -38,18 +37,20 @@ Default values:
 - model: ""
 - sw_version: ""
 - hw_version: ""
-- configuration_url: ""
-- connections: empty
 
 ### User Interface
-- **Creation Screen**: Form with all device fields, pre-filled with defaults
-- **Editing Screen**: Form with editable fields only (name, manufacturer, model, sw_version, hw_version, configuration_url, connections)
-- **Device Management**: List of created devices with edit/delete options
-- **Options Flow**: Access device management from integration options
+- **Creation Screen**: First collect a group name, then optionally add zero or more devices with all device fields
+- **Editing Screen**: Form with editable device fields only (name, manufacturer, model, sw_version, hw_version)
+- **Options Flow**: Access device add/edit/move/delete actions and group rename from integration options
+- **Empty Entries**: A group entry may exist without any devices and may remain empty after deleting the last device
+- **Move Between Hubs**: A stored device may be reassigned from one hub entry to another without replacing the registry device identity
+- **Registry Rename Sync**: Renaming a device in HA device settings is synchronized back to the matching stored device only
+- **Legacy Migration**: Older single-device entries are consolidated into one initial `General` group entry, which can be renamed later
 
 ### Data Storage
-- Devices stored in integration data
-- Each device has unique ID for management
+- Device data stored in integration entry data under a `devices` list
+- Each stored device has a unique internal ID
+- The config entry title acts as the user-editable group name
 - Persistent across restarts
 
 ### API Integration
@@ -57,7 +58,7 @@ Default values:
 - **Authentication**: None required
 - **Rate Limits**: None
 - **Data Format**: Internal HA device registry
-- **Error Handling**: Validation of device fields, unique name checking
+- **Error Handling**: Validation of per-entry device names, legacy migration, and registry synchronization during reload/setup
 
 ### Data Collection
 - **Update Frequency**: N/A (static devices)
@@ -73,7 +74,7 @@ Default values:
 - **Platform Requirements**: Any platform supporting HA
 
 ### Configuration
-- **Required Parameters**: None (devices created via options)
+- **Required Parameters**: None beyond the device fields entered in the UI config flow
 - **Optional Parameters**: None
 - **Validation**: Device field validation
 - **Security**: No sensitive data stored
@@ -91,9 +92,9 @@ Default values:
 
 ### Testing
 - **Coverage Target**: >95%
-- **Unit Tests**: Test device creation, validation, storage
-- **Component Tests**: Test integration setup, device registry integration
-- **Edge Cases**: Invalid fields, duplicate names, delete non-existent
+- **Unit Tests**: Test config flow, multi-device options flow, setup/unload, migration, pruning, and rename synchronization
+- **Component Tests**: Test integration setup and Home Assistant device registry integration
+- **Edge Cases**: Duplicate names within one group, empty group entries, deleting the last device, moving a device between hub entries without losing identity, registry rename propagation, orphan registry device cleanup, and legacy consolidation into `General`
 
 ### Performance
 - **Memory Usage**: Minimal (device configurations)
@@ -143,75 +144,7 @@ Default values:
 
 ---
 
-**Last Updated**: December 2025
-**Maintained by**: Project contributors
-**Related Documents**:
-- `docs/HA_HACS_Integration_Creation_Guide.md`: Setup guide
-- **Sensors**: Temperature, humidity, generic numeric sensors
-- **Binary Sensors**: Not applicable
-- **Switches/Controls**: Not applicable
-- **Weather**: Not applicable
-- **Device Classes**: temperature, humidity, None
-- **Events**: None
-- **Device Triggers**: None
-
-## Quality Requirements
-
-### Testing
-- **Coverage Target**: >95%
-- **Unit Tests**: Test configuration flow, coordinator, sensor creation
-- **Component Tests**: Test integration setup and entity creation
-- **Edge Cases**: Invalid configurations, duplicate names
-
-### Performance
-- **Memory Usage**: Minimal (stores device configurations)
-- **CPU Usage**: Low (no background processing)
-- **Network Usage**: None
-
-### Compatibility
-- **HA Versions**: 2024.1.0+
-- **Python Versions**: 3.11, 3.12
-- **Platforms**: All HA supported platforms
-
-## Security Requirements
-
-- **API Key Handling**: None
-- **Data Privacy**: No user data collected
-- **Network Security**: Not applicable
-- **Error Messages**: Generic error messages only
-
-## Deployment Requirements
-
-### HACS Integration
-- **Category**: integration
-- **Content Root**: false
-- **Supported Countries**: All
-- **README Rendering**: true
-
-### Release Process
-- **Versioning**: Semantic versioning (MAJOR.MINOR.PATCH)
-- **Changelog**: Update CHANGELOG.md with each release
-- **Breaking Changes**: Major version bump
-
-## Maintenance Requirements
-
-### Monitoring
-- **Health Checks**: Verify devices are created and updating
-- **Error Reporting**: Log errors during configuration
-- **Performance Monitoring**: No specific metrics
-
-### Updates
-- **API Changes**: Not applicable
-- **HA Compatibility**: Test against new HA versions
-- **Dependency Updates**: Update as needed
-
-### Internationalization
-- **Supported Languages**: English (base), extensible for others
-- **Translation Coverage**: Configuration flow and entity names
-
----
-
-**Last Updated**: December 2025
+**Last Updated**: 2026-05-01
 **Maintained by**: Project contributors
 **Related Documents**:
 - `docs/HA_HACS_Integration_Creation_Guide.md`: Setup guide

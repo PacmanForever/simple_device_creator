@@ -2,7 +2,13 @@
   "config": {
     "step": {
       "user": {
-        "title": "Create device",
+        "title": "Create group",
+        "data": {
+          "entry_title": "Group name"
+        }
+      },
+      "add_device": {
+        "title": "Add device to group",
         "data": {
           "name": "Name",
           "manufacturer": "Manufacturer (optional)",
@@ -10,10 +16,17 @@
           "sw_version": "Software Version (optional)",
           "hw_version": "Hardware Version (optional)"
         }
+      },
+      "configure_devices": {
+        "title": "Configure group",
+        "menu_options": {
+          "add_device": "Add device",
+          "finish": "Finish group setup"
+        }
       }
     },
     "error": {
-      "name_already_exists": "A device with this name already exists."
+      "name_already_exists": "A device with this name already exists in this group."
     },
     "abort": {},
     "create_entry": {
@@ -22,8 +35,25 @@
   },
   "options": {
     "step": {
-      "user": {
-        "title": "Edit Device",
+      "init": {
+        "title": "Manage group",
+        "menu_options": {
+          "add_device": "Add device to group",
+          "edit_device": "Edit group device",
+          "delete_device": "Delete group device",
+          "move_device": "Move device to another hub",
+          "rename_entry": "Rename group",
+          "finish": "Done"
+        }
+      },
+      "rename_entry": {
+        "title": "Rename group",
+        "data": {
+          "entry_title": "Group name"
+        }
+      },
+      "add_device": {
+        "title": "Add device to group",
         "data": {
           "name": "Name",
           "manufacturer": "Manufacturer (optional)",
@@ -31,10 +61,46 @@
           "sw_version": "Software Version (optional)",
           "hw_version": "Hardware Version (optional)"
         }
+      },
+      "select_device": {
+        "title": "Select group device",
+        "data": {
+          "device_id": "Device"
+        }
+      },
+      "edit_device": {
+        "title": "Edit group device",
+        "data": {
+          "name": "Name",
+          "manufacturer": "Manufacturer (optional)",
+          "model": "Model (optional)",
+          "sw_version": "Software Version (optional)",
+          "hw_version": "Hardware Version (optional)"
+        }
+      },
+      "delete_device": {
+        "title": "Delete group device",
+        "description": "Delete {name} from this group?",
+        "data": {
+          "confirm_delete": "Confirm deletion"
+        }
+      },
+      "select_target_entry": {
+        "title": "Move device",
+        "description": "Move {name} to another hub.",
+        "data": {
+          "target_entry_id": "Destination hub"
+        }
       }
     },
     "error": {
-      "name_already_exists": "A device with this name already exists."
+      "name_already_exists": "A device with this name already exists in this group."
+    },
+    "abort": {
+      "no_devices": "There are no devices available for this action.",
+      "device_not_found": "The selected device could not be found.",
+      "no_target_entries": "There are no other hubs available as a destination.",
+      "target_entry_not_found": "The selected destination hub could not be found."
     }
   }
 }
