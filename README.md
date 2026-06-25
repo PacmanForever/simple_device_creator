@@ -16,6 +16,8 @@
 
 A Home Assistant integration that allows users to create virtual device groups without entities.
 
+The README is kept intentionally focused on the current integration model and setup flow.
+
 ## What This Integration Does
 
 Simple Device Creator lets you create entries in Home Assistant that manage virtual devices in the device registry.
