@@ -97,7 +97,7 @@ class SimpleDeviceCreatorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.devices: list[dict] = []
 
     async def async_step_user(self, user_input=None) -> FlowResult:
-        """Collect the entry title for the new device group."""
+        """Collect the entry title for the new device hub."""
         if user_input is not None:
             self.entry_title = user_input[CONF_ENTRY_TITLE].strip() or DEFAULT_ENTRY_TITLE
             return await self.async_step_configure_devices()
@@ -204,7 +204,7 @@ class SimpleDeviceCreatorOptionsFlow(config_entries.OptionsFlow):
         return self.async_create_entry(title="", data={})
 
     async def async_step_rename_entry(self, user_input=None) -> FlowResult:
-        """Rename the group entry."""
+        """Rename the hub entry."""
         if user_input is not None:
             entry_title = user_input[CONF_ENTRY_TITLE].strip() or DEFAULT_ENTRY_TITLE
             self.hass.config_entries.async_update_entry(
@@ -226,7 +226,7 @@ class SimpleDeviceCreatorOptionsFlow(config_entries.OptionsFlow):
         )
 
     async def async_step_add_device(self, user_input=None) -> FlowResult:
-        """Add a device to an existing group."""
+        """Add a device to an existing hub."""
         errors = {}
 
         if user_input is not None:

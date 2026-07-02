@@ -34,7 +34,7 @@ class TestSimpleDeviceCreatorConfigFlow:
 
     @pytest.mark.asyncio
     async def test_step_user_show_form(self):
-        """Test user step shows the group name form."""
+        """Test user step shows the hub name form."""
         flow = SimpleDeviceCreatorConfigFlow()
 
         result = await flow.async_step_user()
@@ -44,7 +44,7 @@ class TestSimpleDeviceCreatorConfigFlow:
 
     @pytest.mark.asyncio
     async def test_step_user_moves_to_add_device(self):
-        """Test submitting the group name moves to group configuration."""
+        """Test submitting the hub name moves to hub configuration."""
         flow = SimpleDeviceCreatorConfigFlow()
 
         result = await flow.async_step_user({CONF_ENTRY_TITLE: "Kitchen"})
@@ -55,7 +55,7 @@ class TestSimpleDeviceCreatorConfigFlow:
 
     @pytest.mark.asyncio
     async def test_add_device_and_finish_creates_entry(self):
-        """Test creating a group entry after adding a device."""
+        """Test creating a hub entry after adding a device."""
         flow = SimpleDeviceCreatorConfigFlow()
         await flow.async_step_user({CONF_ENTRY_TITLE: "Kitchen"})
 
@@ -81,7 +81,7 @@ class TestSimpleDeviceCreatorConfigFlow:
 
     @pytest.mark.asyncio
     async def test_add_device_rejects_duplicate_names(self):
-        """Test duplicate device names are rejected within a group."""
+        """Test duplicate device names are rejected within a hub."""
         flow = SimpleDeviceCreatorConfigFlow()
         await flow.async_step_user({CONF_ENTRY_TITLE: "Kitchen"})
 
@@ -101,7 +101,7 @@ class TestSimpleDeviceCreatorConfigFlow:
 
     @pytest.mark.asyncio
     async def test_finish_without_devices_creates_empty_entry(self):
-        """Test finishing without devices creates an empty group entry."""
+        """Test finishing without devices creates an empty hub entry."""
         flow = SimpleDeviceCreatorConfigFlow()
         flow.entry_title = "Kitchen"
 
@@ -161,7 +161,7 @@ class TestSimpleDeviceCreatorOptionsFlow:
 
     @pytest.mark.asyncio
     async def test_rename_entry_updates_title(self):
-        """Test renaming the group entry."""
+        """Test renaming the hub entry."""
         flow, config_entry = self._build_flow()
 
         result = await flow.async_step_rename_entry({CONF_ENTRY_TITLE: "Living Room"})
@@ -318,7 +318,7 @@ class TestSimpleDeviceCreatorOptionsFlow:
 
     @pytest.mark.asyncio
     async def test_edit_device_duplicate_name_rejected(self):
-        """Test editing a device rejects duplicate names within the group."""
+        """Test editing a device rejects duplicate names within the hub."""
         flow, _config_entry = self._build_flow(
             devices=[
                 {"id": "dev-1", CONF_NAME: "Device 1", CONF_MANUFACTURER: "A", CONF_MODEL: "M1", CONF_SW_VERSION: "1", CONF_HW_VERSION: "1"},
@@ -470,7 +470,7 @@ class TestSimpleDeviceCreatorOptionsFlow:
 
     @pytest.mark.asyncio
     async def test_delete_last_device_removes_it(self):
-        """Test deleting the last device leaves an empty group."""
+        """Test deleting the last device leaves an empty hub."""
         flow, _config_entry = self._build_flow(devices=[{"id": "dev-1", CONF_NAME: "Only Device"}])
         flow._selected_device_id = "dev-1"
         flow._pending_action = "delete_device"

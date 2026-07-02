@@ -2,13 +2,13 @@
   "config": {
     "step": {
       "user": {
-        "title": "Create group",
+        "title": "Create hub",
         "data": {
-          "entry_title": "Group name"
+          "entry_title": "Hub name"
         }
       },
       "add_device": {
-        "title": "Add device to group",
+        "title": "Add device to hub",
         "data": {
           "name": "Name",
           "manufacturer": "Manufacturer (optional)",
@@ -18,15 +18,15 @@
         }
       },
       "configure_devices": {
-        "title": "Configure group",
+        "title": "Configure hub",
         "menu_options": {
           "add_device": "Add device",
-          "finish": "Finish group setup"
+          "finish": "Finish hub setup"
         }
       }
     },
     "error": {
-      "name_already_exists": "A device with this name already exists in this group."
+      "name_already_exists": "A device with this name already exists in this hub."
     },
     "abort": {},
     "create_entry": {
@@ -36,24 +36,24 @@
   "options": {
     "step": {
       "init": {
-        "title": "Manage group",
+        "title": "Manage hub",
         "menu_options": {
-          "add_device": "Add device to group",
-          "edit_device": "Edit group device",
-          "delete_device": "Delete group device",
+          "add_device": "Add device to hub",
+          "edit_device": "Edit hub device",
+          "delete_device": "Delete hub device",
           "move_device": "Move device to another hub",
-          "rename_entry": "Rename group",
+          "rename_entry": "Rename hub",
           "finish": "Done"
         }
       },
       "rename_entry": {
-        "title": "Rename group",
+        "title": "Rename hub",
         "data": {
-          "entry_title": "Group name"
+          "entry_title": "Hub name"
         }
       },
       "add_device": {
-        "title": "Add device to group",
+        "title": "Add device to hub",
         "data": {
           "name": "Name",
           "manufacturer": "Manufacturer (optional)",
@@ -63,13 +63,13 @@
         }
       },
       "select_device": {
-        "title": "Select group device",
+        "title": "Select hub device",
         "data": {
           "device_id": "Device"
         }
       },
       "edit_device": {
-        "title": "Edit group device",
+        "title": "Edit hub device",
         "data": {
           "name": "Name",
           "manufacturer": "Manufacturer (optional)",
@@ -79,8 +79,8 @@
         }
       },
       "delete_device": {
-        "title": "Delete group device",
-        "description": "Delete {name} from this group?",
+        "title": "Delete hub device",
+        "description": "Delete {name} from this hub?",
         "data": {
           "confirm_delete": "Confirm deletion"
         }
@@ -94,7 +94,7 @@
       }
     },
     "error": {
-      "name_already_exists": "A device with this name already exists in this group."
+      "name_already_exists": "A device with this name already exists in this hub."
     },
     "abort": {
       "no_devices": "There are no devices available for this action.",
