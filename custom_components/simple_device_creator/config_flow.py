@@ -11,6 +11,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers import selector
 
 from .const import (
+    CONF_ENTITY_IDS,
     CONF_ENTRY_TITLE,
     CONF_HW_VERSION,
     CONF_MANUFACTURER,
@@ -42,7 +43,12 @@ CONF_TARGET_ENTRY_ID = "target_entry_id"
 
 def _copy_devices(devices: list[dict]) -> list[dict]:
     """Copy stored device dictionaries."""
-    return [device.copy() for device in devices]
+    copied_devices = []
+    for device in devices:
+        copied_device = device.copy()
+        copied_device[CONF_ENTITY_IDS] = list(device.get(CONF_ENTITY_IDS, []))
+        copied_devices.append(copied_device)
+    return copied_devices
 
 
 def _build_device_schema(defaults: dict | None = None) -> vol.Schema:
@@ -87,6 +93,7 @@ def _build_device_payload(user_input: dict, existing_id: str | None = None) -> d
         CONF_MODEL: user_input[CONF_MODEL],
         CONF_SW_VERSION: user_input[CONF_SW_VERSION],
         CONF_HW_VERSION: user_input[CONF_HW_VERSION],
+        CONF_ENTITY_IDS: list(user_input.get(CONF_ENTITY_IDS, [])),
     }
 
 
@@ -321,7 +328,9 @@ class SimpleDeviceCreatorOptionsFlow(config_entries.OptionsFlow):
                     errors={"base": "name_already_exists"},
                 )
 
-            device_data.update(_build_device_payload(user_input, existing_id=device_data["id"]))
+            updated_device_data = _build_device_payload(user_input, existing_id=device_data["id"])
+            updated_device_data[CONF_ENTITY_IDS] = list(device_data.get(CONF_ENTITY_IDS, []))
+            device_data.update(updated_device_data)
             self._save_devices()
 
             if device_entry:
@@ -414,6 +423,10 @@ class SimpleDeviceCreatorOptionsFlow(config_entries.OptionsFlow):
 
             registry = er.async_get(self.hass)
             registry.async_update_entity(entity_id, device_id=registry_device_id)
+            linked_entity_ids = device_data.setdefault(CONF_ENTITY_IDS, [])
+            if entity_id not in linked_entity_ids:
+                linked_entity_ids.append(entity_id)
+                self._save_devices()
             self._selected_device_id = None
             self._pending_action = None
             return self.async_create_entry(title="", data={})

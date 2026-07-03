@@ -33,10 +33,12 @@ async def _setup_entry_and_get_listener():
     hass.config_entries.async_unload_platforms = AsyncMock(return_value=True)
 
     with patch("custom_components.simple_device_creator.dr.async_get") as mock_async_get, \
+         patch("custom_components.simple_device_creator.er.async_get") as mock_entity_get, \
          patch("custom_components.simple_device_creator.dr.async_entries_for_config_entry") as mock_entries:
         device_reg = MagicMock()
         mock_async_get.return_value = device_reg
         device_reg.async_get_device.return_value = None
+        mock_entity_get.return_value = MagicMock()
         mock_entries.return_value = []
 
         await async_setup_entry(hass, entry)

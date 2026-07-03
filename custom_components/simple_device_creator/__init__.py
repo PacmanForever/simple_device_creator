@@ -3,8 +3,10 @@
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import entity_registry as er
 
 from .const import (
+    CONF_ENTITY_IDS,
     CONF_HW_VERSION,
     CONF_MANUFACTURER,
     CONF_MODEL,
@@ -21,8 +23,37 @@ CURRENT_ENTRY_VERSION = 2
 def _copy_entry_data(entry_data: dict) -> dict:
     """Copy entry data while preserving nested device dictionaries."""
     copied_data = dict(entry_data)
-    copied_data["devices"] = [device.copy() for device in entry_data.get("devices", [])]
+    copied_devices = []
+    for device in entry_data.get("devices", []):
+        copied_device = device.copy()
+        copied_device[CONF_ENTITY_IDS] = list(device.get(CONF_ENTITY_IDS, []))
+        copied_devices.append(copied_device)
+    copied_data["devices"] = copied_devices
     return copied_data
+
+
+def _remove_entity_link(updated_data: dict, entity_id: str) -> bool:
+    """Remove a linked entity from stored device data."""
+    changed = False
+    for device_data in updated_data.get("devices", []):
+        entity_ids = list(device_data.get(CONF_ENTITY_IDS, []))
+        if entity_id not in entity_ids:
+            continue
+        device_data[CONF_ENTITY_IDS] = [linked_id for linked_id in entity_ids if linked_id != entity_id]
+        changed = True
+    return changed
+
+
+def _linked_entity_targets(entry_data: dict) -> dict[str, str]:
+    """Return the target internal device ID for each stored linked entity."""
+    linked_entities: dict[str, str] = {}
+    for device_data in entry_data.get("devices", []):
+        device_id = device_data.get("id")
+        if not device_id:
+            continue
+        for entity_id in device_data.get(CONF_ENTITY_IDS, []):
+            linked_entities[entity_id] = device_id
+    return linked_entities
 
 
 def _find_internal_device_id(device_entry) -> str | None:
@@ -101,6 +132,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id] = entry.data
 
     device_reg = dr.async_get(hass)
+    entity_reg = er.async_get(hass)
     new_data = _copy_entry_data(entry.data)
     devices = new_data.get("devices", [])
     current_ids = set()
@@ -117,7 +149,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 data_changed = True
             device_reg.async_update_device(device_entry.id, name_by_user=None)
 
-        device_reg.async_get_or_create(
+        registry_device = device_reg.async_get_or_create(
             config_entry_id=entry.entry_id,
             identifiers={(DOMAIN, device_id)},
             name=device_data.get(CONF_NAME),
@@ -126,6 +158,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             sw_version=device_data.get(CONF_SW_VERSION),
             hw_version=device_data.get(CONF_HW_VERSION),
         )
+
+        linked_entity_ids = list(device_data.get(CONF_ENTITY_IDS, []))
+        if not linked_entity_ids:
+            continue
+
+        remaining_entity_ids = []
+        for entity_id in linked_entity_ids:
+            entity_entry = entity_reg.async_get(entity_id)
+            if entity_entry is None:
+                data_changed = True
+                continue
+            remaining_entity_ids.append(entity_id)
+            if entity_entry.device_id != registry_device.id:
+                entity_reg.async_update_entity(entity_id, device_id=registry_device.id)
+
+        if remaining_entity_ids != linked_entity_ids:
+            device_data[CONF_ENTITY_IDS] = remaining_entity_ids
 
     if data_changed:
         hass.config_entries.async_update_entry(entry, data=new_data)
@@ -137,6 +186,36 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             device_reg.async_remove_device(device_entry.id)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    @callback
+    def async_entity_registry_updated(event: Event) -> None:
+        """Reapply stored entity-to-device links after registry changes."""
+        if "entity_id" not in event.data:
+            return
+
+        entity_id = event.data["entity_id"]
+        linked_entities = _linked_entity_targets(entry.data)
+        if entity_id not in linked_entities:
+            return
+
+        if event.data["action"] == "remove":
+            updated_data = _copy_entry_data(entry.data)
+            if _remove_entity_link(updated_data, entity_id):
+                hass.config_entries.async_update_entry(entry, data=updated_data)
+            return
+
+        entity_entry = entity_reg.async_get(entity_id)
+        if entity_entry is None:
+            return
+
+        target_device = device_reg.async_get_device(
+            identifiers={(DOMAIN, linked_entities[entity_id])}
+        )
+        if target_device is None:
+            return
+
+        if entity_entry.device_id != target_device.id:
+            entity_reg.async_update_entity(entity_id, device_id=target_device.id)
 
     @callback
     def async_registry_updated(event: Event) -> None:
@@ -172,6 +251,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     entry.async_on_unload(
         hass.bus.async_listen(dr.EVENT_DEVICE_REGISTRY_UPDATED, async_registry_updated)
+    )
+    entry.async_on_unload(
+        hass.bus.async_listen(er.EVENT_ENTITY_REGISTRY_UPDATED, async_entity_registry_updated)
     )
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 

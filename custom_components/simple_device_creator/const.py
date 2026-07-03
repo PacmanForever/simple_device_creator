@@ -9,6 +9,7 @@ CONF_MANUFACTURER = "manufacturer"
 CONF_MODEL = "model"
 CONF_SW_VERSION = "sw_version"
 CONF_HW_VERSION = "hw_version"
+CONF_ENTITY_IDS = "entity_ids"
 
 # Menu options for config flow
 MENU_ADD_DEVICE = "add_device"

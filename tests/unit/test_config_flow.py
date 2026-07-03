@@ -13,6 +13,7 @@ from custom_components.simple_device_creator.config_flow import (
     SimpleDeviceCreatorOptionsFlow,
 )
 from custom_components.simple_device_creator.const import (
+    CONF_ENTITY_IDS,
     CONF_ENTRY_TITLE,
     CONF_HW_VERSION,
     CONF_MANUFACTURER,
@@ -398,6 +399,8 @@ class TestSimpleDeviceCreatorOptionsFlow:
         mock_entity_registry.async_update_entity.assert_called_once_with(
             "sensor.orphan", device_id="registry-id"
         )
+        call_kwargs = flow.hass.config_entries.async_update_entry.call_args.kwargs
+        assert call_kwargs["data"]["devices"][0][CONF_ENTITY_IDS] == ["sensor.orphan"]
 
     @pytest.mark.asyncio
     async def test_add_orphan_entity_aborts_when_registry_device_missing(self):
