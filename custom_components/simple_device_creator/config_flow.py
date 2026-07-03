@@ -7,6 +7,8 @@ from homeassistant import config_entries
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import selector
 
 from .const import (
     CONF_ENTRY_TITLE,
@@ -23,6 +25,7 @@ from .const import (
     DEFAULT_SW_VERSION,
     DOMAIN,
     MENU_ADD_DEVICE,
+    MENU_ADD_ORPHAN_ENTITY,
     MENU_DELETE_DEVICE,
     MENU_EDIT_DEVICE,
     MENU_FINISH,
@@ -33,6 +36,7 @@ from .const import (
 
 CONF_DEVICE_ID = "device_id"
 CONF_CONFIRM_DELETE = "confirm_delete"
+CONF_ENTITY_ID = "entity_id"
 CONF_TARGET_ENTRY_ID = "target_entry_id"
 
 
@@ -169,6 +173,27 @@ class SimpleDeviceCreatorOptionsFlow(config_entries.OptionsFlow):
         """Build the updated config entry data payload."""
         return {**self._config_entry.data, "devices": self.devices}
 
+    def _orphan_entities(self) -> list:
+        """Return entity registry entries not linked to any device."""
+        registry = er.async_get(self.hass)
+        return sorted(
+            [entry for entry in registry.entities.values() if entry.device_id is None],
+            key=lambda entry: entry.entity_id,
+        )
+
+    def _selected_registry_device_id(self) -> str | None:
+        """Return the Home Assistant registry device ID for the selected hub device."""
+        device_data = self._get_device()
+        if device_data is None:
+            return None
+
+        registry = dr.async_get(self.hass)
+        registry_device = registry.async_get_device(identifiers={(DOMAIN, device_data["id"])})
+        if registry_device is None:
+            return None
+
+        return registry_device.id
+
     def _save_devices(self) -> None:
         """Persist the current device list to the config entry."""
         self.hass.config_entries.async_update_entry(
@@ -192,7 +217,9 @@ class SimpleDeviceCreatorOptionsFlow(config_entries.OptionsFlow):
         """Show the main action menu."""
         menu_options = [MENU_ADD_DEVICE, MENU_RENAME_ENTRY]
         if self.devices:
-            menu_options.extend([MENU_EDIT_DEVICE, MENU_DELETE_DEVICE])
+            menu_options.extend(
+                [MENU_EDIT_DEVICE, MENU_DELETE_DEVICE, MENU_ADD_ORPHAN_ENTITY]
+            )
             if self._available_target_entries():
                 menu_options.append(MENU_MOVE_DEVICE)
         menu_options.append(MENU_FINISH)
@@ -254,6 +281,8 @@ class SimpleDeviceCreatorOptionsFlow(config_entries.OptionsFlow):
                 return await self.async_step_edit_device()
             if self._pending_action == MENU_DELETE_DEVICE:
                 return await self.async_step_delete_device()
+            if self._pending_action == MENU_ADD_ORPHAN_ENTITY:
+                return await self.async_step_add_orphan_entity()
             if self._pending_action == MENU_MOVE_DEVICE:
                 return await self.async_step_move_device()
             return await self.async_step_init()
@@ -355,6 +384,55 @@ class SimpleDeviceCreatorOptionsFlow(config_entries.OptionsFlow):
             return self.async_abort(reason="device_not_found")
 
         return await self.async_step_select_target_entry()
+
+    async def async_step_add_orphan_entity(self, user_input=None) -> FlowResult:
+        """Attach an orphan entity to a hub device."""
+        if self._selected_device_id is None:
+            self._pending_action = MENU_ADD_ORPHAN_ENTITY
+            return await self.async_step_select_device()
+
+        device_data = self._get_device()
+        if device_data is None:
+            return self.async_abort(reason="device_not_found")
+
+        registry_device_id = self._selected_registry_device_id()
+        if registry_device_id is None:
+            return self.async_abort(reason="device_registry_entry_not_found")
+
+        orphan_entities = self._orphan_entities()
+        if not orphan_entities:
+            return self.async_abort(reason="no_orphan_entities")
+
+        if user_input is not None:
+            entity_id = user_input[CONF_ENTITY_ID]
+            entity_entry = next(
+                (entry for entry in orphan_entities if entry.entity_id == entity_id),
+                None,
+            )
+            if entity_entry is None:
+                return self.async_abort(reason="entity_not_found")
+
+            registry = er.async_get(self.hass)
+            registry.async_update_entity(entity_id, device_id=registry_device_id)
+            self._selected_device_id = None
+            self._pending_action = None
+            return self.async_create_entry(title="", data={})
+
+        return self.async_show_form(
+            step_id="add_orphan_entity",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_ENTITY_ID): selector.EntitySelector(
+                        selector.EntitySelectorConfig(
+                            include_entities=[
+                                entry.entity_id for entry in orphan_entities
+                            ]
+                        )
+                    )
+                }
+            ),
+            description_placeholders={CONF_NAME: device_data[CONF_NAME]},
+        )
 
     async def async_step_select_target_entry(self, user_input=None) -> FlowResult:
         """Select the destination hub for the current device."""

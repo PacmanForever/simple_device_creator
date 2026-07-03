@@ -39,6 +39,7 @@
         "title": "Manage hub",
         "menu_options": {
           "add_device": "Add device to hub",
+          "add_orphan_entity": "Add orphan entity to hub device",
           "edit_device": "Edit hub device",
           "delete_device": "Delete hub device",
           "move_device": "Move device to another hub",
@@ -60,6 +61,13 @@
           "model": "Model (optional)",
           "sw_version": "Software Version (optional)",
           "hw_version": "Hardware Version (optional)"
+        }
+      },
+      "add_orphan_entity": {
+        "title": "Add orphan entity to hub device",
+        "description": "Attach an orphan entity to {name}.",
+        "data": {
+          "entity_id": "Entity"
         }
       },
       "select_device": {
@@ -99,6 +107,9 @@
     "abort": {
       "no_devices": "There are no devices available for this action.",
       "device_not_found": "The selected device could not be found.",
+      "device_registry_entry_not_found": "The selected hub device is not available in the device registry.",
+      "no_orphan_entities": "There are no orphan entities available.",
+      "entity_not_found": "The selected entity could not be found.",
       "no_target_entries": "There are no other hubs available as a destination.",
       "target_entry_not_found": "The selected destination hub could not be found."
     }

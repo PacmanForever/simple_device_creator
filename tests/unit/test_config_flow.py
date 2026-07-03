@@ -7,6 +7,7 @@ import pytest
 from custom_components.simple_device_creator.config_flow import (
     CONF_CONFIRM_DELETE,
     CONF_DEVICE_ID,
+    CONF_ENTITY_ID,
     CONF_TARGET_ENTRY_ID,
     SimpleDeviceCreatorConfigFlow,
     SimpleDeviceCreatorOptionsFlow,
@@ -20,6 +21,7 @@ from custom_components.simple_device_creator.const import (
     CONF_SW_VERSION,
     DEFAULT_ENTRY_TITLE,
     DOMAIN,
+    MENU_ADD_ORPHAN_ENTITY,
 )
 
 
@@ -129,6 +131,7 @@ class TestSimpleDeviceCreatorOptionsFlow:
         flow = SimpleDeviceCreatorOptionsFlow(config_entry)
         flow.hass = MagicMock()
         flow.hass.config_entries.async_entries.return_value = [config_entry]
+        flow.hass.states.get.return_value = None
         return flow, config_entry
 
     @pytest.mark.asyncio
@@ -138,11 +141,17 @@ class TestSimpleDeviceCreatorOptionsFlow:
             devices=[{"id": "dev-1", CONF_NAME: "Device 1"}]
         )
 
-        result = await flow.async_step_init()
+        with patch("custom_components.simple_device_creator.config_flow.er.async_get") as mock_er_get:
+            mock_entity_registry = MagicMock()
+            mock_entity_registry.entities.values.return_value = []
+            mock_er_get.return_value = mock_entity_registry
+
+            result = await flow.async_step_init()
 
         assert result["type"] == "menu"
         assert result["step_id"] == "init"
         assert "add_device" in result["menu_options"]
+        assert MENU_ADD_ORPHAN_ENTITY in result["menu_options"]
         assert "rename_entry" in result["menu_options"]
 
     @pytest.mark.asyncio
@@ -155,9 +164,31 @@ class TestSimpleDeviceCreatorOptionsFlow:
         other_entry.data = {"devices": []}
         flow.hass.config_entries.async_entries.return_value = [config_entry, other_entry]
 
-        result = await flow.async_step_init()
+        with patch("custom_components.simple_device_creator.config_flow.er.async_get") as mock_er_get:
+            mock_entity_registry = MagicMock()
+            mock_entity_registry.entities.values.return_value = []
+            mock_er_get.return_value = mock_entity_registry
+
+            result = await flow.async_step_init()
 
         assert "move_device" in result["menu_options"]
+
+    @pytest.mark.asyncio
+    async def test_step_init_includes_add_orphan_entity_when_available(self):
+        """Test init step includes orphan entity action when an orphan entity exists."""
+        flow, _config_entry = self._build_flow(devices=[{"id": "dev-1", CONF_NAME: "Device 1"}])
+        orphan_entity = MagicMock()
+        orphan_entity.device_id = None
+        orphan_entity.entity_id = "sensor.orphan"
+
+        with patch("custom_components.simple_device_creator.config_flow.er.async_get") as mock_er_get:
+            mock_entity_registry = MagicMock()
+            mock_entity_registry.entities.values.return_value = [orphan_entity]
+            mock_er_get.return_value = mock_entity_registry
+
+            result = await flow.async_step_init()
+
+        assert MENU_ADD_ORPHAN_ENTITY in result["menu_options"]
 
     @pytest.mark.asyncio
     async def test_rename_entry_updates_title(self):
@@ -284,6 +315,28 @@ class TestSimpleDeviceCreatorOptionsFlow:
         assert delete_result["type"] == "form"
         assert delete_result["step_id"] == "delete_device"
 
+        orphan_entity = MagicMock()
+        orphan_entity.device_id = None
+        orphan_entity.entity_id = "sensor.orphan"
+        orphan_entity.name = "Orphan Sensor"
+        orphan_entity.original_name = "Orphan Sensor"
+        flow._pending_action = MENU_ADD_ORPHAN_ENTITY
+        flow._selected_device_id = None
+        with patch("custom_components.simple_device_creator.config_flow.dr.async_get") as mock_dr_get, \
+             patch("custom_components.simple_device_creator.config_flow.er.async_get") as mock_er_get:
+            mock_device_registry = MagicMock()
+            registry_device = MagicMock()
+            registry_device.id = "registry-id"
+            mock_device_registry.async_get_device.return_value = registry_device
+            mock_dr_get.return_value = mock_device_registry
+            mock_entity_registry = MagicMock()
+            mock_entity_registry.entities.values.return_value = [orphan_entity]
+            mock_er_get.return_value = mock_entity_registry
+            orphan_result = await flow.async_step_select_device({CONF_DEVICE_ID: "dev-1"})
+
+        assert orphan_result["type"] == "form"
+        assert orphan_result["step_id"] == "add_orphan_entity"
+
         other_entry = MagicMock()
         other_entry.entry_id = "entry-other"
         other_entry.title = "Other"
@@ -294,6 +347,73 @@ class TestSimpleDeviceCreatorOptionsFlow:
         move_result = await flow.async_step_select_device({CONF_DEVICE_ID: "dev-1"})
         assert move_result["type"] == "form"
         assert move_result["step_id"] == "select_target_entry"
+
+    @pytest.mark.asyncio
+    async def test_add_orphan_entity_aborts_without_orphans(self):
+        """Test add orphan entity aborts when no orphan entities exist."""
+        flow, _config_entry = self._build_flow(devices=[{"id": "dev-1", CONF_NAME: "Device 1"}])
+        flow._selected_device_id = "dev-1"
+
+        with patch("custom_components.simple_device_creator.config_flow.dr.async_get") as mock_dr_get, \
+             patch("custom_components.simple_device_creator.config_flow.er.async_get") as mock_er_get:
+            mock_device_registry = MagicMock()
+            registry_device = MagicMock()
+            registry_device.id = "registry-id"
+            mock_device_registry.async_get_device.return_value = registry_device
+            mock_dr_get.return_value = mock_device_registry
+            mock_entity_registry = MagicMock()
+            mock_entity_registry.entities.values.return_value = []
+            mock_er_get.return_value = mock_entity_registry
+
+            result = await flow.async_step_add_orphan_entity()
+
+        assert result["type"] == "abort"
+        assert result["reason"] == "no_orphan_entities"
+
+    @pytest.mark.asyncio
+    async def test_add_orphan_entity_updates_entity_registry(self):
+        """Test add orphan entity links the selected orphan entity to the hub device."""
+        flow, _config_entry = self._build_flow(devices=[{"id": "dev-1", CONF_NAME: "Device 1"}])
+        flow._selected_device_id = "dev-1"
+        orphan_entity = MagicMock()
+        orphan_entity.device_id = None
+        orphan_entity.entity_id = "sensor.orphan"
+        orphan_entity.name = "Orphan Sensor"
+        orphan_entity.original_name = "Orphan Sensor"
+
+        with patch("custom_components.simple_device_creator.config_flow.dr.async_get") as mock_dr_get, \
+             patch("custom_components.simple_device_creator.config_flow.er.async_get") as mock_er_get:
+            mock_device_registry = MagicMock()
+            registry_device = MagicMock()
+            registry_device.id = "registry-id"
+            mock_device_registry.async_get_device.return_value = registry_device
+            mock_dr_get.return_value = mock_device_registry
+            mock_entity_registry = MagicMock()
+            mock_entity_registry.entities.values.return_value = [orphan_entity]
+            mock_er_get.return_value = mock_entity_registry
+
+            result = await flow.async_step_add_orphan_entity({CONF_ENTITY_ID: "sensor.orphan"})
+
+        assert result["type"] == "create_entry"
+        mock_entity_registry.async_update_entity.assert_called_once_with(
+            "sensor.orphan", device_id="registry-id"
+        )
+
+    @pytest.mark.asyncio
+    async def test_add_orphan_entity_aborts_when_registry_device_missing(self):
+        """Test add orphan entity aborts if the selected hub device is missing from the registry."""
+        flow, _config_entry = self._build_flow(devices=[{"id": "dev-1", CONF_NAME: "Device 1"}])
+        flow._selected_device_id = "dev-1"
+
+        with patch("custom_components.simple_device_creator.config_flow.dr.async_get") as mock_dr_get:
+            mock_device_registry = MagicMock()
+            mock_device_registry.async_get_device.return_value = None
+            mock_dr_get.return_value = mock_device_registry
+
+            result = await flow.async_step_add_orphan_entity()
+
+        assert result["type"] == "abort"
+        assert result["reason"] == "device_registry_entry_not_found"
 
     @pytest.mark.asyncio
     async def test_edit_device_without_selected_device_uses_selector(self):

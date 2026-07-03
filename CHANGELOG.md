@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.17] - 2026-07-03
+
+### Added
+- Added an options-flow action to link orphan Home Assistant entities to hub devices created by this integration.
+
+### Changed
+- Replaced the orphan-entity picker with a scalable Home Assistant entity selector instead of a radio-style choice list.
+- Kept the orphan-entity action visible whenever a hub has devices, even when there are currently no orphan entities available.
+
+### Fixed
+- Added test coverage for orphan-entity linking paths and maintained package coverage above the project target.
+
 ## [0.0.16] - 2026-07-02
 
 ### Changed
@@ -50,15 +62,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed "Delete Device" option from Options Flow (devices must be deleted from HA Registry).
 
 ## [Unreleased]
-
-### Added
-
-### Changed
-
-### Fixed
-
-### Deprecated
-
-### Removed
-
-### Security
