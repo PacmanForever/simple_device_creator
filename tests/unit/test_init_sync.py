@@ -29,9 +29,11 @@ async def test_startup_sync_name_from_registry_updates_device_only():
     entry.async_on_unload = MagicMock()
 
     with patch("custom_components.simple_device_creator.dr.async_get") as mock_dr_get, \
+         patch("custom_components.simple_device_creator.er.async_get") as mock_er_get, \
          patch("custom_components.simple_device_creator.dr.async_entries_for_config_entry") as mock_entries:
         device_reg = MagicMock()
         mock_dr_get.return_value = device_reg
+        mock_er_get.return_value = MagicMock()
 
         renamed_device = MagicMock()
         renamed_device.id = "reg_dev_123"

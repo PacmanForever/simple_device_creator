@@ -29,9 +29,11 @@ async def test_async_setup_entry_without_devices():
     hass.config_entries.async_forward_entry_setups = AsyncMock(return_value=None)
 
     with patch("custom_components.simple_device_creator.dr.async_get") as mock_async_get, \
+         patch("custom_components.simple_device_creator.er.async_get") as mock_entity_get, \
          patch("custom_components.simple_device_creator.dr.async_entries_for_config_entry") as mock_entries:
         device_reg = MagicMock()
         mock_async_get.return_value = device_reg
+        mock_entity_get.return_value = MagicMock()
         mock_entries.return_value = []
 
         result = await async_setup_entry(hass, entry)
@@ -57,11 +59,13 @@ async def test_async_setup_entry_with_multiple_devices():
     hass.config_entries.async_forward_entry_setups = AsyncMock(return_value=None)
 
     with patch("custom_components.simple_device_creator.dr.async_get") as mock_async_get, \
+         patch("custom_components.simple_device_creator.er.async_get") as mock_entity_get, \
          patch("custom_components.simple_device_creator.dr.async_entries_for_config_entry") as mock_entries:
         device_reg = MagicMock()
         device_reg.async_get_or_create = MagicMock()
         device_reg.async_get_device.return_value = None
         mock_async_get.return_value = device_reg
+        mock_entity_get.return_value = MagicMock()
         mock_entries.return_value = []
 
         result = await async_setup_entry(hass, entry)
@@ -82,10 +86,12 @@ async def test_async_setup_entry_prunes_removed_devices():
     hass.config_entries.async_forward_entry_setups = AsyncMock(return_value=None)
 
     with patch("custom_components.simple_device_creator.dr.async_get") as mock_async_get, \
+         patch("custom_components.simple_device_creator.er.async_get") as mock_entity_get, \
          patch("custom_components.simple_device_creator.dr.async_entries_for_config_entry") as mock_entries:
         device_reg = MagicMock()
         device_reg.async_get_device.return_value = None
         mock_async_get.return_value = device_reg
+        mock_entity_get.return_value = MagicMock()
 
         current_device = MagicMock()
         current_device.id = "current-device"
