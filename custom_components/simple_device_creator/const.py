@@ -14,6 +14,7 @@ CONF_ENTITY_IDS = "entity_ids"
 # Menu options for config flow
 MENU_ADD_DEVICE = "add_device"
 MENU_ADD_ORPHAN_ENTITY = "add_orphan_entity"
+MENU_REMOVE_LINKED_ENTITY = "remove_linked_entity"
 MENU_EDIT_DEVICE = "edit_device"
 MENU_DELETE_DEVICE = "delete_device"
 MENU_MOVE_DEVICE = "move_device"
@@ -24,6 +25,7 @@ MENU_FINISH = "finish"
 MENU_OPTIONS = [
     MENU_ADD_DEVICE,
     MENU_ADD_ORPHAN_ENTITY,
+    MENU_REMOVE_LINKED_ENTITY,
     MENU_EDIT_DEVICE,
     MENU_DELETE_DEVICE,
     MENU_MOVE_DEVICE,

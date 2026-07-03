@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.19] - 2026-07-03
+
+### Added
+- Added an options-flow action to remove a previously linked entity from a managed hub device.
+
+### Changed
+- Replaced the hub-device chooser in the options flow with a scalable Home Assistant selector.
+- Reordered the hub management menu to prioritize rename and core device actions, and renamed the final action to `Exit`.
+
+### Fixed
+- Fixed an unlink race where a removed entity could be reattached immediately by the entity-registry listener before the stored config-entry data was updated.
+
 ## [0.0.18] - 2026-07-03
 
 ### Fixed

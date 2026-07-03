@@ -39,6 +39,7 @@ In practice, that means:
 - A created device appears in Home Assistant as a device
 - That device has no sensors, switches, or other entities by default
 - You can later attach orphan entities to that device from this integration's options flow
+- You can later remove previously linked entities from that device from the same options flow
 - The integration keeps the configured metadata synchronized with the device registry
 
 The hub itself is represented by the config entry, not by a separate Home Assistant device.
@@ -105,7 +106,7 @@ After installation, add the integration through the Home Assistant UI:
 3. Search for "Simple Device Creator"
 4. Choose a hub name for the entry
 5. Optionally add devices with their metadata fields during setup
-6. Use the integration options to add, edit, move, delete, rename, or link orphan entities later
+6. Use the integration options to rename the hub, add or edit devices, delete devices, link orphan entities, or remove linked entities later
 
 ## Setup Example
 
@@ -116,7 +117,8 @@ Example:
 3. Open the entry options later
 4. Add devices such as `TV Cabinet`, `Ambient Controller`, or `Media Rack`
 5. Optionally link orphan entities to those devices when you have them available
-6. Edit, move, or delete those devices whenever needed
+6. Optionally remove linked entities again if you want them to become orphan entities later
+7. Edit, move, or delete those devices whenever needed
 
 This lets you treat the integration entry as a container and the devices as the items inside that container.
 
@@ -127,21 +129,26 @@ This lets you treat the integration entry as a container and the devices as the 
 - Configure device metadata: name, manufacturer, model, software version, and hardware version
 - Add, edit, move, and delete devices from the integration options flow, including deleting the last remaining device in a hub
 - Link orphan Home Assistant entities to managed hub devices from the integration options flow
+- Remove previously linked entities from managed hub devices from the integration options flow
 - Rename the config entry independently as a device hub title
 - Keep device names synchronized with renames done from the Home Assistant device registry without changing the hub title
 - Remove orphaned registry devices when they are no longer present in the config entry data
 - Migrate legacy single-device setups into one initial `General` hub entry
 
-## Linking Orphan Entities
+## Linking And Removing Entities
 
-The options flow can attach an orphan entity to one of the hub devices managed by this integration.
+The options flow can attach an orphan entity to one of the hub devices managed by this integration, and it can also remove a previously linked entity from that device later.
 
 In practical terms:
 
 - The entity must already exist in Home Assistant
 - The entity must currently have no linked device in the entity registry
-- The selection UI is limited to orphan entities only
+- The selection UI is limited to orphan entities only when attaching
+- The device-selection step uses Home Assistant selectors so it remains usable even when a hub contains many devices
+- When removing a linked entity, the integration clears the stored link before updating the entity registry so the entity stays detached
 - If there are no orphan entities available, the action remains visible but the flow will tell you that none are available
+
+After a linked entity is removed, it becomes an orphan entity again and can be attached elsewhere later.
 
 This keeps the feature predictable and avoids stealing entities away from devices managed by other integrations.
 

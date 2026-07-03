@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+from homeassistant.helpers import selector
 
 from custom_components.simple_device_creator.config_flow import (
     CONF_CONFIRM_DELETE,
@@ -23,6 +24,7 @@ from custom_components.simple_device_creator.const import (
     DEFAULT_ENTRY_TITLE,
     DOMAIN,
     MENU_ADD_ORPHAN_ENTITY,
+    MENU_REMOVE_LINKED_ENTITY,
 )
 
 
@@ -151,9 +153,15 @@ class TestSimpleDeviceCreatorOptionsFlow:
 
         assert result["type"] == "menu"
         assert result["step_id"] == "init"
-        assert "add_device" in result["menu_options"]
-        assert MENU_ADD_ORPHAN_ENTITY in result["menu_options"]
-        assert "rename_entry" in result["menu_options"]
+        assert result["menu_options"] == [
+            "rename_entry",
+            "add_device",
+            "edit_device",
+            "delete_device",
+            MENU_ADD_ORPHAN_ENTITY,
+            MENU_REMOVE_LINKED_ENTITY,
+            "finish",
+        ]
 
     @pytest.mark.asyncio
     async def test_step_init_includes_move_when_other_hub_exists(self):
@@ -291,6 +299,26 @@ class TestSimpleDeviceCreatorOptionsFlow:
         assert result["step_id"] == "select_device"
 
     @pytest.mark.asyncio
+    async def test_select_device_uses_select_selector(self):
+        """Test select device uses a Home Assistant select selector."""
+        flow, _config_entry = self._build_flow(
+            devices=[
+                {"id": "dev-1", CONF_NAME: "Device 1"},
+                {"id": "dev-2", CONF_NAME: "Device 2"},
+            ]
+        )
+
+        result = await flow.async_step_select_device()
+
+        selector_config = result["data_schema"].schema[CONF_DEVICE_ID]
+        assert isinstance(selector_config, selector.SelectSelector)
+        assert selector_config.config["mode"] == selector.SelectSelectorMode.DROPDOWN
+        assert selector_config.config["options"] == [
+            {"value": "dev-1", "label": "Device 1"},
+            {"value": "dev-2", "label": "Device 2"},
+        ]
+
+    @pytest.mark.asyncio
     async def test_select_device_routes_to_edit_and_delete(self):
         """Test select device routes to the pending action."""
         flow, _config_entry = self._build_flow(
@@ -337,6 +365,22 @@ class TestSimpleDeviceCreatorOptionsFlow:
 
         assert orphan_result["type"] == "form"
         assert orphan_result["step_id"] == "add_orphan_entity"
+
+        linked_entity = MagicMock()
+        linked_entity.entity_id = "sensor.linked"
+        linked_entity.name = "Linked Sensor"
+        linked_entity.original_name = "Linked Sensor"
+        flow.devices[0][CONF_ENTITY_IDS] = ["sensor.linked"]
+        flow._pending_action = MENU_REMOVE_LINKED_ENTITY
+        flow._selected_device_id = None
+        with patch("custom_components.simple_device_creator.config_flow.er.async_get") as mock_er_get:
+            mock_entity_registry = MagicMock()
+            mock_entity_registry.async_get.return_value = linked_entity
+            mock_er_get.return_value = mock_entity_registry
+            remove_result = await flow.async_step_select_device({CONF_DEVICE_ID: "dev-1"})
+
+        assert remove_result["type"] == "form"
+        assert remove_result["step_id"] == "remove_linked_entity"
 
         other_entry = MagicMock()
         other_entry.entry_id = "entry-other"
@@ -417,6 +461,82 @@ class TestSimpleDeviceCreatorOptionsFlow:
 
         assert result["type"] == "abort"
         assert result["reason"] == "device_registry_entry_not_found"
+
+    @pytest.mark.asyncio
+    async def test_remove_linked_entity_aborts_without_linked_entities(self):
+        """Test remove linked entity aborts when the selected device has no linked entities."""
+        flow, _config_entry = self._build_flow(devices=[{"id": "dev-1", CONF_NAME: "Device 1"}])
+        flow._selected_device_id = "dev-1"
+
+        with patch("custom_components.simple_device_creator.config_flow.er.async_get") as mock_er_get:
+            mock_entity_registry = MagicMock()
+            mock_er_get.return_value = mock_entity_registry
+
+            result = await flow.async_step_remove_linked_entity()
+
+        assert result["type"] == "abort"
+        assert result["reason"] == "no_linked_entities"
+
+    @pytest.mark.asyncio
+    async def test_remove_linked_entity_updates_entity_registry_and_storage(self):
+        """Test removing a linked entity detaches it and removes it from stored device data."""
+        flow, _config_entry = self._build_flow(
+            devices=[
+                {"id": "dev-1", CONF_NAME: "Device 1", CONF_ENTITY_IDS: ["sensor.linked"]}
+            ]
+        )
+        flow._selected_device_id = "dev-1"
+        linked_entity = MagicMock()
+        linked_entity.entity_id = "sensor.linked"
+        linked_entity.name = "Linked Sensor"
+        linked_entity.original_name = "Linked Sensor"
+
+        with patch("custom_components.simple_device_creator.config_flow.er.async_get") as mock_er_get:
+            mock_entity_registry = MagicMock()
+            mock_entity_registry.async_get.return_value = linked_entity
+            mock_er_get.return_value = mock_entity_registry
+
+            result = await flow.async_step_remove_linked_entity({CONF_ENTITY_ID: "sensor.linked"})
+
+        assert result["type"] == "create_entry"
+        mock_entity_registry.async_update_entity.assert_called_once_with(
+            "sensor.linked", device_id=None
+        )
+        call_kwargs = flow.hass.config_entries.async_update_entry.call_args.kwargs
+        assert call_kwargs["data"]["devices"][0][CONF_ENTITY_IDS] == []
+
+    @pytest.mark.asyncio
+    async def test_remove_linked_entity_persists_before_registry_update(self):
+        """Test unlinking stores the removal before emitting the registry update."""
+        flow, _config_entry = self._build_flow(
+            devices=[
+                {"id": "dev-1", CONF_NAME: "Device 1", CONF_ENTITY_IDS: ["sensor.linked"]}
+            ]
+        )
+        flow._selected_device_id = "dev-1"
+        linked_entity = MagicMock()
+        linked_entity.entity_id = "sensor.linked"
+
+        call_order = []
+
+        def _record_update_entry(*args, **kwargs):
+            call_order.append("save")
+
+        def _record_update_entity(*args, **kwargs):
+            call_order.append("unlink")
+
+        flow.hass.config_entries.async_update_entry.side_effect = _record_update_entry
+
+        with patch("custom_components.simple_device_creator.config_flow.er.async_get") as mock_er_get:
+            mock_entity_registry = MagicMock()
+            mock_entity_registry.async_get.return_value = linked_entity
+            mock_entity_registry.async_update_entity.side_effect = _record_update_entity
+            mock_er_get.return_value = mock_entity_registry
+
+            result = await flow.async_step_remove_linked_entity({CONF_ENTITY_ID: "sensor.linked"})
+
+        assert result["type"] == "create_entry"
+        assert call_order == ["save", "unlink"]
 
     @pytest.mark.asyncio
     async def test_edit_device_without_selected_device_uses_selector(self):

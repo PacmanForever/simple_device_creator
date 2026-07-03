@@ -31,6 +31,7 @@ from .const import (
     MENU_EDIT_DEVICE,
     MENU_FINISH,
     MENU_MOVE_DEVICE,
+    MENU_REMOVE_LINKED_ENTITY,
     MENU_RENAME_ENTRY,
 )
 
@@ -70,6 +71,26 @@ def _build_device_schema(defaults: dict | None = None) -> vol.Schema:
                 CONF_HW_VERSION,
                 default=defaults.get(CONF_HW_VERSION, DEFAULT_HW_VERSION),
             ): str,
+        }
+    )
+
+
+def _build_device_selector_schema(devices: list[dict]) -> vol.Schema:
+    """Build the device selection schema for hub-managed devices."""
+    return vol.Schema(
+        {
+            vol.Required(CONF_DEVICE_ID): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=[
+                        selector.SelectOptionDict(
+                            value=device["id"],
+                            label=device[CONF_NAME],
+                        )
+                        for device in devices
+                    ],
+                    mode=selector.SelectSelectorMode.DROPDOWN,
+                )
+            )
         }
     )
 
@@ -201,6 +222,21 @@ class SimpleDeviceCreatorOptionsFlow(config_entries.OptionsFlow):
 
         return registry_device.id
 
+    def _linked_entities_for_selected_device(self) -> list:
+        """Return entity registry entries linked to the selected hub device."""
+        device_data = self._get_device()
+        if device_data is None:
+            return []
+
+        registry = er.async_get(self.hass)
+        linked_entities = []
+        for entity_id in device_data.get(CONF_ENTITY_IDS, []):
+            entity_entry = registry.async_get(entity_id)
+            if entity_entry is not None:
+                linked_entities.append(entity_entry)
+
+        return sorted(linked_entities, key=lambda entry: entry.entity_id)
+
     def _save_devices(self) -> None:
         """Persist the current device list to the config entry."""
         self.hass.config_entries.async_update_entry(
@@ -222,10 +258,15 @@ class SimpleDeviceCreatorOptionsFlow(config_entries.OptionsFlow):
 
     async def async_step_init(self, user_input=None) -> FlowResult:
         """Show the main action menu."""
-        menu_options = [MENU_ADD_DEVICE, MENU_RENAME_ENTRY]
+        menu_options = [MENU_RENAME_ENTRY, MENU_ADD_DEVICE]
         if self.devices:
             menu_options.extend(
-                [MENU_EDIT_DEVICE, MENU_DELETE_DEVICE, MENU_ADD_ORPHAN_ENTITY]
+                [
+                    MENU_EDIT_DEVICE,
+                    MENU_DELETE_DEVICE,
+                    MENU_ADD_ORPHAN_ENTITY,
+                    MENU_REMOVE_LINKED_ENTITY,
+                ]
             )
             if self._available_target_entries():
                 menu_options.append(MENU_MOVE_DEVICE)
@@ -290,19 +331,15 @@ class SimpleDeviceCreatorOptionsFlow(config_entries.OptionsFlow):
                 return await self.async_step_delete_device()
             if self._pending_action == MENU_ADD_ORPHAN_ENTITY:
                 return await self.async_step_add_orphan_entity()
+            if self._pending_action == MENU_REMOVE_LINKED_ENTITY:
+                return await self.async_step_remove_linked_entity()
             if self._pending_action == MENU_MOVE_DEVICE:
                 return await self.async_step_move_device()
             return await self.async_step_init()
 
         return self.async_show_form(
             step_id="select_device",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_DEVICE_ID): vol.In(
-                        {device["id"]: device[CONF_NAME] for device in self.devices}
-                    )
-                }
-            ),
+            data_schema=_build_device_selector_schema(self.devices),
         )
 
     async def async_step_edit_device(self, user_input=None) -> FlowResult:
@@ -439,6 +476,57 @@ class SimpleDeviceCreatorOptionsFlow(config_entries.OptionsFlow):
                         selector.EntitySelectorConfig(
                             include_entities=[
                                 entry.entity_id for entry in orphan_entities
+                            ]
+                        )
+                    )
+                }
+            ),
+            description_placeholders={CONF_NAME: device_data[CONF_NAME]},
+        )
+
+    async def async_step_remove_linked_entity(self, user_input=None) -> FlowResult:
+        """Detach a previously linked entity from a hub device."""
+        if self._selected_device_id is None:
+            self._pending_action = MENU_REMOVE_LINKED_ENTITY
+            return await self.async_step_select_device()
+
+        device_data = self._get_device()
+        if device_data is None:
+            return self.async_abort(reason="device_not_found")
+
+        linked_entities = self._linked_entities_for_selected_device()
+        if not linked_entities:
+            return self.async_abort(reason="no_linked_entities")
+
+        if user_input is not None:
+            entity_id = user_input[CONF_ENTITY_ID]
+            entity_entry = next(
+                (entry for entry in linked_entities if entry.entity_id == entity_id),
+                None,
+            )
+            if entity_entry is None:
+                return self.async_abort(reason="entity_not_found")
+
+            registry = er.async_get(self.hass)
+            device_data[CONF_ENTITY_IDS] = [
+                linked_id
+                for linked_id in device_data.get(CONF_ENTITY_IDS, [])
+                if linked_id != entity_id
+            ]
+            self._save_devices()
+            registry.async_update_entity(entity_id, device_id=None)
+            self._selected_device_id = None
+            self._pending_action = None
+            return self.async_create_entry(title="", data={})
+
+        return self.async_show_form(
+            step_id="remove_linked_entity",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_ENTITY_ID): selector.EntitySelector(
+                        selector.EntitySelectorConfig(
+                            include_entities=[
+                                entry.entity_id for entry in linked_entities
                             ]
                         )
                     )
