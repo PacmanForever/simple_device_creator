@@ -319,6 +319,26 @@ class TestSimpleDeviceCreatorOptionsFlow:
         ]
 
     @pytest.mark.asyncio
+    async def test_select_device_sorts_options_alphabetically(self):
+        """Test select device sorts the dropdown options alphabetically."""
+        flow, _config_entry = self._build_flow(
+            devices=[
+                {"id": "dev-3", CONF_NAME: "zeta"},
+                {"id": "dev-1", CONF_NAME: "Alpha"},
+                {"id": "dev-2", CONF_NAME: "beta"},
+            ]
+        )
+
+        result = await flow.async_step_select_device()
+
+        selector_config = result["data_schema"].schema[CONF_DEVICE_ID]
+        assert selector_config.config["options"] == [
+            {"value": "dev-1", "label": "Alpha"},
+            {"value": "dev-2", "label": "beta"},
+            {"value": "dev-3", "label": "zeta"},
+        ]
+
+    @pytest.mark.asyncio
     async def test_select_device_routes_to_edit_and_delete(self):
         """Test select device routes to the pending action."""
         flow, _config_entry = self._build_flow(
@@ -750,6 +770,30 @@ class TestSimpleDeviceCreatorOptionsFlow:
 
         assert result["type"] == "form"
         assert result["step_id"] == "select_target_entry"
+
+    @pytest.mark.asyncio
+    async def test_move_device_sorts_target_hubs_alphabetically(self):
+        """Test moving a device sorts destination hubs alphabetically."""
+        flow, config_entry = self._build_flow(devices=[{"id": "dev-1", CONF_NAME: "Only Device"}])
+        zeta_entry = MagicMock()
+        zeta_entry.entry_id = "entry-zeta"
+        zeta_entry.title = "Zeta"
+        zeta_entry.data = {"devices": []}
+        alpha_entry = MagicMock()
+        alpha_entry.entry_id = "entry-alpha"
+        alpha_entry.title = "Alpha"
+        alpha_entry.data = {"devices": []}
+        flow.hass.config_entries.async_entries.return_value = [config_entry, zeta_entry, alpha_entry]
+        flow._selected_device_id = "dev-1"
+
+        result = await flow.async_step_move_device()
+
+        target_selector = result["data_schema"].schema[CONF_TARGET_ENTRY_ID]
+        assert target_selector.config["mode"] == selector.SelectSelectorMode.DROPDOWN
+        assert target_selector.config["options"] == [
+            {"value": "entry-alpha", "label": "Alpha"},
+            {"value": "entry-zeta", "label": "Zeta"},
+        ]
 
     @pytest.mark.asyncio
     async def test_move_device_rejects_duplicate_name_in_target(self):

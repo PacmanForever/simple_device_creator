@@ -77,6 +77,10 @@ def _build_device_schema(defaults: dict | None = None) -> vol.Schema:
 
 def _build_device_selector_schema(devices: list[dict]) -> vol.Schema:
     """Build the device selection schema for hub-managed devices."""
+    sorted_devices = sorted(
+        devices,
+        key=lambda device: (device.get(CONF_NAME, "").casefold(), device["id"]),
+    )
     return vol.Schema(
         {
             vol.Required(CONF_DEVICE_ID): selector.SelectSelector(
@@ -86,7 +90,7 @@ def _build_device_selector_schema(devices: list[dict]) -> vol.Schema:
                             value=device["id"],
                             label=device[CONF_NAME],
                         )
-                        for device in devices
+                        for device in sorted_devices
                     ],
                     mode=selector.SelectSelectorMode.DROPDOWN,
                 )
@@ -537,7 +541,10 @@ class SimpleDeviceCreatorOptionsFlow(config_entries.OptionsFlow):
 
     async def async_step_select_target_entry(self, user_input=None) -> FlowResult:
         """Select the destination hub for the current device."""
-        available_entries = self._available_target_entries()
+        available_entries = sorted(
+            self._available_target_entries(),
+            key=lambda entry: ((entry.title or entry.entry_id).casefold(), entry.entry_id),
+        )
         if not available_entries:
             return self.async_abort(reason="no_target_entries")
 
@@ -601,11 +608,17 @@ class SimpleDeviceCreatorOptionsFlow(config_entries.OptionsFlow):
             step_id="select_target_entry",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_TARGET_ENTRY_ID): vol.In(
-                        {
-                            entry.entry_id: entry.title or entry.entry_id
-                            for entry in available_entries
-                        }
+                    vol.Required(CONF_TARGET_ENTRY_ID): selector.SelectSelector(
+                        selector.SelectSelectorConfig(
+                            options=[
+                                selector.SelectOptionDict(
+                                    value=entry.entry_id,
+                                    label=entry.title or entry.entry_id,
+                                )
+                                for entry in available_entries
+                            ],
+                            mode=selector.SelectSelectorMode.DROPDOWN,
+                        )
                     )
                 }
             ),
