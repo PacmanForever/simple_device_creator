@@ -55,7 +55,7 @@ tests/
 
 - Support Python 3.11 and 3.12
 - Compatible with Home Assistant 2024.1.0+
-- Test against latest stable and beta releases
+- Test against latest stable and development releases
 
 ## Release Process
 

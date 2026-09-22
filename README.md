@@ -11,9 +11,6 @@
 
 ![Home Assistant](https://img.shields.io/badge/home%20assistant-2024.1.0%2B-blue)
 
-> [!IMPORTANT]
-> **Beta:** This integration is in *beta* phase. Correct functioning is not guaranteed and may contain errors; use it at your own risk.
-
 A Home Assistant integration that allows users to create virtual device hubs without entities.
 
 The README is kept intentionally focused on the current integration model and setup flow.

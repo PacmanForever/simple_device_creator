@@ -159,7 +159,7 @@ Create workflows in `.github/workflows/` for:
 - **Component Tests**: `tests_component.yml` - Runs component tests with coverage  
 - **HACS Validation**: `validate_hacs.yml` - Validates HACS compatibility
 - **Hassfest Validation**: `validate_hassfest.yml` - Validates HA manifest and structure
-- **Daily Compatibility**: `daily_compatibility.yml` - Checks compatibility with latest HA stable/beta
+- **Daily Compatibility**: `daily_compatibility.yml` - Checks compatibility with latest HA stable and development builds
 
 ### Workflow Configuration
 Use these triggers for all workflows:
@@ -355,7 +355,7 @@ This helps AI assistants understand the codebase and maintain consistency.
 - **Tests**: Write comprehensive tests for all functionalities - unit tests for isolated logic, component tests for HA integration.
 - **CI/CD**: Keep all workflows green, test against multiple Python versions (3.11, 3.12).
 - **Validation**: Ensure HACS and Hassfest validations pass.
-- **Compatibility**: Run daily checks against latest HA stable/beta releases.
+- **Compatibility**: Run daily checks against latest HA stable and development releases.
 - **Security**: Do not expose API keys in commits.
 - **Community**: Accept contributions and keep issues open.
 
