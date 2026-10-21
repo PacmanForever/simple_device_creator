@@ -83,10 +83,13 @@ The intended model is:
 
 1. Open HACS in your Home Assistant instance
 2. Go to Integrations
-3. Click the three dots in the top right corner
-4. Select "Custom repositories"
-5. Add this repository URL: `https://github.com/PacmanForever/simple_device_creator`
-6. Search for "Simple Device Creator" and install
+3. Search for "Simple Device Creator" and install
+
+If "Simple Device Creator" is not listed in HACS, install it as a custom repository:
+
+1. In HACS Integrations, click the three dots in the top right corner and select "Custom repositories"
+2. Add this repository URL: `https://github.com/PacmanForever/simple_device_creator`, select "Integration" as the category, and add it
+3. Search for "Simple Device Creator" and install
 
 ### Manual Installation
 
