@@ -11,7 +11,6 @@
 [![Home Assistant tested](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2FPacmanForever%2Fsimple_device_creator%2Fmaster%2Fdocs%2Fhome_assistant_compatibility.json&query=%24.tested_version&suffix=%20tested&label=home%20assistant&color=blue)](https://github.com/PacmanForever/simple_device_creator/actions/workflows/daily_compatibility.yml)
 [![Daily HA compatibility](https://github.com/PacmanForever/simple_device_creator/actions/workflows/daily_compatibility.yml/badge.svg?branch=master)](https://github.com/PacmanForever/simple_device_creator/actions/workflows/daily_compatibility.yml)
 
-![Home Assistant](https://img.shields.io/badge/home%20assistant-2024.1.0%2B-blue)
 
 A Home Assistant integration that allows users to create virtual device hubs without entities.
 
