@@ -25,3 +25,50 @@ jobs:
           pip install homeassistant==${{ matrix.homeassistant-version }}
           pip install -r requirements-test.txt
       - run: python -m pytest tests/component --cov=custom_components.simple_device_creator --cov-report=term -v
+
+  latest-ha:
+    name: Latest Home Assistant compatibility
+    runs-on: ubuntu-latest
+    outputs:
+      tested_version: ${{ steps.home_assistant_version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+          cache: pip
+          cache-dependency-path: requirements-test.txt
+      - run: pip install -r requirements-test.txt
+      - run: pip install --upgrade homeassistant pytest-homeassistant-custom-component
+      - name: Capture tested Home Assistant version
+        id: home_assistant_version
+        run: echo "version=$(python -c 'from importlib.metadata import version; print(version("homeassistant"))')" >> "$GITHUB_OUTPUT"
+      - run: python -m pytest tests/component -v
+
+  publish-tested-version:
+    if: github.ref == 'refs/heads/master'
+    needs: latest-ha
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: master
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+      - name: Update tested version badge data
+        env:
+          TESTED_VERSION: ${{ needs.latest-ha.outputs.tested_version }}
+        run: |
+          python -c "import json, os; from pathlib import Path; Path('docs/home_assistant_compatibility.json').write_text(json.dumps({'tested_version': os.environ['TESTED_VERSION']}, indent=2) + '\\n')"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/home_assistant_compatibility.json
+          if git diff --cached --quiet; then
+            exit 0
+          fi
+          git commit -m "chore: update tested Home Assistant version"
+          git pull --rebase origin master
+          git push origin master
